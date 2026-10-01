@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Genesis IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#0d0d0e; --card:#161617; --ink:#1f1f21; --input:#2b2b2e;
+    --gray:#8a8a8f; --line:#e7e7e9; --white:#ffffff; --off:#f4f4f5;
+    --err:#ff8a8a;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:"Nunito Sans",system-ui,sans-serif;background:var(--white);color:var(--ink)}
+  [hidden]{display:none !important}
+
+  /* Logo */
+  .brand{display:inline-flex;flex-direction:column;align-items:flex-end;line-height:1;user-select:none}
+  .brand .word{font-weight:800;letter-spacing:-.5px}
+  .brand .word b{font-weight:800;color:var(--gray)}
+  .brand .tag{font-weight:800;letter-spacing:1.5px;margin-top:2px}
+
+  /* ===== Inicio de sesión ===== */
+  .login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--white)}
+  .login-card{width:100%;max-width:400px;min-height:240px;background:var(--card);border-radius:18px;box-shadow:10px 12px 26px rgba(0,0,0,.35);padding:44px 32px 30px;display:flex;flex-direction:column;align-items:center}
+  .login-card .brand{color:var(--white);margin-bottom:28px}
+  .login-card .word{font-size:40px}
+  .login-card .tag{font-size:12px;color:var(--white)}
+  .form{width:100%;max-width:200px;display:flex;flex-direction:column;gap:12px}
+  .field{position:relative}
+  .field svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--gray)}
+  .field input{width:100%;height:26px;border:1px solid #3a3a3e;border-radius:99px;background:var(--input);color:var(--white);font:inherit;font-size:12px;font-weight:600;padding:0 12px 0 29px;outline:none}
+  .field input::placeholder{color:#a9a9ae}
+  .field input:focus{border-color:var(--white)}
+  .btn-in{height:26px;border:0;border-radius:99px;background:var(--white);color:var(--black);font:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:background .15s}
+  .btn-in:hover{background:#dcdcdf}
+  .btn-in:disabled{opacity:.6;cursor:default}
+  .msg{min-height:16px;font-size:11px;text-align:center;color:var(--err)}
+  .corner{position:fixed;right:14px;bottom:10px;color:var(--black)}
+  .corner .word{font-size:20px}
+  .corner .tag{font-size:8px}
+
+  /* ===== Carga ===== */
+  .loader{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(8,8,9,.82);opacity:0;transition:opacity .25s}
+  .loader.show{opacity:1}
+  .ring{position:relative;width:160px;height:160px;display:flex;align-items:center;justify-content:center}
+  .ring::before,.ring::after{content:"";position:absolute;border-radius:50%;border:3px solid transparent}
+  .ring::before{inset:0;border-top-color:var(--white);border-right-color:var(--white);animation:spin 1s cubic-bezier(.5,.1,.5,.9) infinite}
+  .ring::after{inset:14px;border-bottom-color:#9a9aa0;border-left-color:#9a9aa0;animation:spin 1.4s linear infinite reverse}
+  .ring .brand{color:var(--white);animation:pulse 1.2s ease-in-out infinite}
+  .ring .word{font-size:28px}
+  .ring .tag{font-size:9px;color:var(--white)}
+  .bar{position:absolute;bottom:-34px;left:50%;transform:translateX(-50%);width:120px;height:2px;background:#333;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--white);animation:fill 2s linear forwards}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes pulse{50%{opacity:.55}}
+  @keyframes fill{to{width:100%}}
+
+  /* ===== App (vacía, empezamos de cero) ===== */
+  .app{min-height:100%;display:flex;flex-direction:column;background:var(--off)}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px;background:var(--black);color:var(--white)}
+  .top .word{font-size:22px}
+  .top .tag{font-size:8px;color:var(--white)}
+  .btn-out{padding:7px 16px;border:1px solid #444;border-radius:99px;background:transparent;color:var(--white);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  .btn-out:hover{background:#222}
+  .main{flex:1;display:flex;align-items:center;justify-content:center;padding:24px 16px;color:var(--gray);text-align:center}
+</style>
+</head>
+<body>
+
+<!-- Inicio de sesión -->
+<div class="login" id="login">
+  <div class="login-card">
+    <div class="brand"><div class="word"><b>g</b>enesis</div><div class="tag">IA</div></div>
+    <form class="form" id="loginForm" autocomplete="off">
+      <div class="field">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 9V7a5 5 0 0 0-10 0v2H5v13h14V9h-2zm-8 0V7a3 3 0 0 1 6 0v2H9z"/></svg>
+        <input id="password" type="password" placeholder="Contraseña" required>
+      </div>
+      <button class="btn-in" id="loginBtn" type="submit">Entrar</button>
+      <div class="msg" id="loginMsg"></div>
+    </form>
+  </div>
+  <div class="corner brand"><div class="word"><b>g</b>enesis</div><div class="tag">IA</div></div>
+</div>
+
+<!-- Carga -->
+<div class="loader" id="loader" hidden>
+  <div class="ring">
+    <div class="brand"><div class="word"><b>g</b>enesis</div><div class="tag">IA</div></div>
+    <div class="bar"><i id="barFill"></i></div>
+  </div>
+</div>
+
+<!-- App -->
+<div class="app" id="app" hidden>
+  <header class="top">
+    <div class="brand"><div class="word"><b>g</b>enesis</div><div class="tag">IA</div></div>
+    <button class="btn-out" id="logoutBtn">Salir</button>
+  </header>
+  <main class="main" id="main">Bienvenido a Genesis</main>
+</div>
+
+<script>
+  const FN_URL = "https://gbiectjjqhbfolnjljoe.supabase.co/functions/v1/analizar-solicitud";
+  const $ = id => document.getElementById(id);
+  let CODE = null;
+
+  const ss = {
+    get(){ try { return sessionStorage.getItem('genesis_code'); } catch { return null; } },
+    set(v){ try { sessionStorage.setItem('genesis_code', v); } catch {} },
+    del(){ try { sessionStorage.removeItem('genesis_code'); } catch {} }
+  };
+
+  async function api(accion, extra = {}){
+    const r = await fetch(FN_URL, {
+      method: 'POST',
+      headers: { 'x-access-code': CODE, 'content-type': 'application/json' },
+      body: JSON.stringify({ accion, ...extra })
+    });
+    const data = await r.json().catch(() => ({ error: `Error ${r.status}` }));
+    if (!r.ok || data.error) { const e = new Error(data.error || `Error ${r.status}`); e.status = r.status; throw e; }
+    return data;
+  }
+
+  function showApp(){ $('login').hidden = true; $('app').hidden = false; }
+  function showLogin(msg = ''){ $('app').hidden = true; $('login').hidden = false; $('loginMsg').textContent = msg; $('password').value = ''; $('password').focus(); }
+
+  function startLoader(){
+    const l = $('loader'), bar = $('barFill');
+    bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = '';
+    l.hidden = false; requestAnimationFrame(() => l.classList.add('show'));
+  }
+  function stopLoader(){
+    const l = $('loader'); l.classList.remove('show'); setTimeout(() => l.hidden = true, 250);
+  }
+
+  $('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const pwd = $('password').value.trim();
+    if (!pwd) return;
+    CODE = pwd;
+    $('loginBtn').disabled = true; $('loginMsg').textContent = '';
+    startLoader();
+    const espera = new Promise(r => setTimeout(r, 2000)); // carga de ~2 s
+    try {
+      await Promise.all([api('verificar'), espera]);
+      ss.set(pwd); showApp();
+    } catch (err) {
+      await espera;
+      CODE = null;
+      $('loginMsg').textContent = err.status === 401 ? 'Contraseña incorrecta' : 'No se pudo conectar';
+    } finally {
+      stopLoader(); $('loginBtn').disabled = false;
+    }
+  });
+
+  $('logoutBtn').onclick = () => { CODE = null; ss.del(); showLogin(); };
+
+  (async () => {
+    const saved = ss.get();
+    if (saved) { CODE = saved; try { await api('verificar'); showApp(); return; } catch { ss.del(); CODE = null; } }
+    showLogin();
+  })();
+</script>
+</body>
+</html>
