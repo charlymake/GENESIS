@@ -1,0 +1,1530 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Genesis IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#0d0d0e; --card:#161617; --side:#18181a; --side-hover:#26262a; --side-active:#ffffff;
+    --ink:#1f1f21; --input:#2b2b2e; --gray:#8a8a8f; --line:#e7e7e9; --white:#ffffff; --off:#f4f4f5;
+    --err:#ff8a8a;
+    --petrol:#11407B;
+    --side-w:248px; --side-w-mini:64px; --top-h:56px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:"Nunito Sans",system-ui,sans-serif;background:var(--white);color:var(--ink)}
+  [hidden]{display:none !important}
+  button{font:inherit}
+
+  /* Logo */
+  .brand{display:inline-flex;flex-direction:column;align-items:flex-end;line-height:1;user-select:none}
+  .brand .word{font-weight:800;letter-spacing:-.5px}
+  .brand .word b{font-weight:800;color:var(--gray)}
+  .brand .tag{font-weight:800;letter-spacing:1.5px;margin-top:2px}
+  /* Acento de marca: azul petróleo en la "g" y en "IA" */
+  .brand .word b, .brand .tag{color:var(--petrol) !important}
+
+  /* ===== Inicio de sesión ===== */
+  .login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--white)}
+  .login-card{width:100%;max-width:400px;min-height:240px;background:var(--card);border-radius:18px;box-shadow:10px 12px 26px rgba(0,0,0,.35);padding:44px 32px 30px;display:flex;flex-direction:column;align-items:center}
+  .login-card .brand{color:var(--white);margin-bottom:28px}
+  .login-card .word{font-size:40px}
+  .login-card .tag{font-size:12px;color:var(--white)}
+  .form{width:100%;max-width:200px;display:flex;flex-direction:column;gap:12px}
+  .field{position:relative}
+  .field svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--gray)}
+  .field input{width:100%;height:26px;border:1px solid #3a3a3e;border-radius:99px;background:var(--input);color:var(--white);font:inherit;font-size:12px;font-weight:600;padding:0 12px 0 29px;outline:none}
+  .field input::placeholder{color:#a9a9ae}
+  .field input:focus{border-color:var(--white)}
+  .btn-in{height:26px;border:0;border-radius:99px;background:var(--white);color:var(--black);font-size:12px;font-weight:800;cursor:pointer;transition:background .15s}
+  .btn-in:hover{background:#dcdcdf}
+  .btn-in:disabled{opacity:.6;cursor:default}
+  .msg{min-height:16px;font-size:11px;text-align:center;color:var(--err)}
+  .corner{position:fixed;right:14px;bottom:10px;color:var(--black)}
+  .corner .word{font-size:20px}
+  .corner .tag{font-size:8px}
+
+  /* ===== Carga ===== */
+  .loader{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(8,8,9,.82);opacity:0;transition:opacity .25s}
+  .loader.show{opacity:1}
+  .ring{position:relative;width:160px;height:160px;display:flex;align-items:center;justify-content:center}
+  .ring::before,.ring::after{content:"";position:absolute;border-radius:50%;border:3px solid transparent}
+  .ring::before{inset:0;border-top-color:var(--white);border-right-color:var(--white);animation:spin 1s cubic-bezier(.5,.1,.5,.9) infinite}
+  .ring::after{inset:14px;border-bottom-color:#9a9aa0;border-left-color:#9a9aa0;animation:spin 1.4s linear infinite reverse}
+  .ring .brand{color:var(--white);animation:pulse 1.2s ease-in-out infinite}
+  .ring .word{font-size:28px}
+  .ring .tag{font-size:9px;color:var(--white)}
+  .bar{position:absolute;bottom:-34px;left:50%;transform:translateX(-50%);width:120px;height:2px;background:#333;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--white);animation:fill 2s linear forwards}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes pulse{50%{opacity:.55}}
+  @keyframes fill{to{width:100%}}
+
+  /* ===== App ===== */
+  .app{height:100%;display:flex;flex-direction:column;background:var(--off)}
+  .top{height:var(--top-h);flex:none;display:flex;align-items:center;gap:12px;padding:0 16px;background:var(--black);color:var(--white)}
+  .top .brand .word{font-size:22px}
+  .top .brand .tag{font-size:8px;color:var(--white)}
+  .top .spacer{flex:1}
+  .top .where{font-size:13px;color:#b9b9be;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .icon-btn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:transparent;color:var(--white);cursor:pointer}
+  .icon-btn:hover{background:#222}
+  .icon-btn svg{width:20px;height:20px}
+  .menu-toggle{display:none}
+
+  .body{flex:1;display:flex;min-height:0}
+
+  /* ===== Menú lateral ===== */
+  .side{width:var(--side-w);flex:none;background:var(--side);color:var(--white);display:flex;flex-direction:column;transition:width .2s ease;overflow:hidden}
+  .side-head{display:flex;align-items:center;gap:8px;padding:12px 12px 8px}
+  .collapse-btn svg{transition:transform .2s}
+  .search{flex:1;position:relative}
+  .search input{width:100%;height:32px;border:0;border-radius:99px;background:var(--white);color:var(--black);font:inherit;font-size:13px;font-style:italic;padding:0 34px 0 14px;outline:none}
+  .search input:focus{box-shadow:0 0 0 2px #8a8a8f}
+  .search svg{position:absolute;right:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--black);pointer-events:none}
+
+  .nav{flex:1;overflow-y:auto;padding:4px 8px 8px;scrollbar-width:thin;scrollbar-color:#333 transparent}
+  .nav-item{width:100%;display:flex;align-items:center;gap:12px;min-height:40px;padding:8px 10px;border:0;border-radius:8px;background:transparent;color:#e9e9ec;font-size:13px;font-weight:700;text-align:left;cursor:pointer;white-space:nowrap}
+  .nav-item:hover{background:var(--side-hover)}
+  .nav-item.active{background:var(--side-active);color:var(--black)}
+  .nav-item .ico{width:22px;height:22px;flex:none;display:flex;align-items:center;justify-content:center}
+  .nav-item .ico svg{width:20px;height:20px}
+  .nav-item .lbl{flex:1;overflow:hidden;text-overflow:ellipsis}
+  .nav-item .chev{width:14px;height:14px;flex:none;transition:transform .2s;opacity:.8}
+  .group.open > .nav-item .chev{transform:rotate(180deg)}
+  .sub{display:none;padding:2px 0 4px 34px}
+  .group.open > .sub{display:block}
+  .sub .nav-item{min-height:32px;font-weight:600;font-size:12.5px;color:#c9c9ce;padding:6px 10px}
+  .sub .nav-item::before{content:"";width:5px;height:5px;border-radius:50%;background:#6b6b70;flex:none}
+  .sub .nav-item.active{color:var(--black);font-weight:800}
+  .sub .nav-item.active::before{background:var(--black)}
+  .nav-sep{height:1px;background:#2c2c30;margin:8px 6px}
+  .no-results{font-size:12px;color:var(--gray);padding:10px 12px}
+  .side-foot{padding:8px;border-top:1px solid #2c2c30}
+
+  /* Menú contraído (solo iconos) */
+  .side.mini{width:var(--side-w-mini)}
+  .side.mini .search,.side.mini .lbl,.side.mini .chev,.side.mini .sub,.side.mini .no-results{display:none !important}
+  .side.mini .side-head{justify-content:center}
+  .side.mini .collapse-btn svg{transform:rotate(180deg)}
+  .side.mini .nav-item{justify-content:center;padding:8px 0}
+
+  /* Contenido */
+  .main{flex:1;min-width:0;overflow:auto;padding:24px}
+  .page-title{margin:0 0 6px;font-size:22px;font-weight:800;color:var(--black)}
+  .page-sub{margin:0 0 18px;color:var(--gray);font-size:14px}
+  .placeholder{background:var(--white);border:1px dashed #d4d4d8;border-radius:12px;padding:40px 16px;text-align:center;color:var(--gray)}
+
+  /* Paneles */
+  .panel{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .panel-title{font-size:13px;font-weight:800;letter-spacing:1px;color:var(--black);margin-bottom:14px}
+  .panel-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;flex-wrap:wrap}
+  .muted{color:var(--gray);font-size:13px}
+  .btn-dark{padding:9px 22px;border:0;border-radius:99px;background:var(--black);color:var(--white);font-weight:800;font-size:13px;cursor:pointer}
+  .btn-dark:hover{background:#2a2a2d}
+  .btn-dark:disabled{opacity:.35;cursor:default}
+  .link{background:none;border:0;padding:0;color:var(--black);font-weight:700;font-size:13px;text-decoration:underline;cursor:pointer}
+  .link.danger{color:#c03535}
+  .spin-sm{width:14px;height:14px;border:2px solid #ddd;border-top-color:var(--black);border-radius:50%;display:inline-block;vertical-align:-2px;margin-right:8px;animation:spin 1s linear infinite}
+
+  /* Selector de tienda */
+  .store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+  .store{position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #d9d9dd;border-radius:6px;background:var(--white);cursor:pointer;transition:border-color .15s, box-shadow .15s}
+  .store:hover{border-color:#9a9aa0}
+  .store input{position:absolute;opacity:0;pointer-events:none}
+  /* Casilla (selección múltiple) */
+  .store .dot{width:18px;height:18px;flex:none;border:1.5px solid #8a8a8f;border-radius:4px;display:flex;align-items:center;justify-content:center;background:var(--white);transition:background .15s,border-color .15s}
+  .store .dot::after{content:"";width:5px;height:9px;border:solid var(--white);border-width:0 2px 2px 0;transform:rotate(45deg) scale(0);margin-top:-2px;transition:transform .15s}
+  .store:has(input:checked){border-color:var(--black);box-shadow:0 0 0 1px var(--black)}
+  .store:has(input:checked) .dot{border-color:var(--black);background:var(--black)}
+  .store:has(input:checked) .dot::after{transform:rotate(45deg) scale(1)}
+  .store:has(input:focus-visible){outline:2px solid var(--petrol);outline-offset:2px}
+  .st-txt{display:flex;flex-direction:column;min-width:0}
+  .st-name{font-size:14px;font-weight:700;color:var(--black)}
+  .st-sub{font-size:12px;color:var(--gray);margin-top:2px}
+  .st-dist{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--petrol);margin-top:4px}
+  .st-dist svg{width:12px;height:12px;flex:none}
+  .st-dist.off{color:var(--gray);font-weight:600}
+  .sel-tools{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+
+  /* Comparativa */
+  .cmp-wrap{margin-top:16px;overflow-x:auto}
+  .cmp{width:100%;border-collapse:collapse;font-size:13px;min-width:420px}
+  .cmp th,.cmp td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  .cmp thead th{font-size:12px;font-weight:800;color:var(--black);border-bottom:2px solid var(--black);white-space:nowrap}
+  .cmp tbody th{font-weight:700;color:#55555a;white-space:nowrap}
+  .cmp td.num{font-variant-numeric:tabular-nums}
+  .cmp td.best{font-weight:800;color:var(--petrol)}
+  .cmp td.best::after{content:" ▲";font-size:10px}
+  .cmp .sec td{background:var(--off);font-size:11px;font-weight:800;letter-spacing:1px;color:var(--gray)}
+  .cmp .empty td{color:var(--gray);text-align:center;padding:22px 12px}
+
+  /* Configuración de tiendas */
+  .add-row{display:flex;gap:8px;flex-wrap:wrap}
+  .add-row input{flex:1;min-width:180px;padding:9px 12px;border:1px solid #d9d9dd;border-radius:8px;font:inherit;font-size:14px}
+  .add-row input:focus{outline:none;border-color:var(--black)}
+  .form-msg{min-height:18px;font-size:13px;color:#c03535;margin:6px 0}
+  .t-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:6px}
+  .t-form label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;color:#55555a}
+  .t-form .span2{grid-column:1 / -1}
+  .t-form input{padding:9px 12px;border:1px solid #d9d9dd;border-radius:8px;font:inherit;font-size:14px;font-weight:400;color:var(--black);width:100%}
+  .t-form input:focus{outline:none;border-color:var(--black)}
+  .loc{display:flex;align-items:center;gap:8px;position:relative}
+  .loc svg{position:absolute;left:11px;width:16px;height:16px;color:var(--gray);pointer-events:none}
+  .loc input{padding-left:34px;flex:1}
+  .btn-light{padding:9px 16px;border:1px solid #d9d9dd;border-radius:99px;background:var(--white);color:var(--black);font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+  .btn-light:hover{border-color:var(--black)}
+  .map-box{border:1px solid var(--line);border-radius:10px;overflow:hidden;height:220px;background:#eee}
+  .map-box iframe{width:100%;height:100%;border:0;filter:grayscale(.35)}
+  .t-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .t-actions .form-msg{margin:0}
+  .row-actions{display:flex;gap:14px;flex:none}
+  .maplink{color:var(--petrol);font-weight:700}
+  @media (max-width:640px){ .t-form{grid-template-columns:1fr} .loc{flex-wrap:wrap} .loc .btn-light{width:100%} }
+  .t-list{list-style:none;margin:0;padding:0}
+  .t-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line)}
+  .t-list li:last-child{border-bottom:0}
+
+  /* Personal: ficha de colaborador (catálogo + horas/nómina del checador) */
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800;letter-spacing:.3px}
+  .pill.ok{background:#e8f3ec;color:#1e7a43}
+  .pill.off{background:#f4f4f5;color:var(--gray)}
+  .pill.open{background:#fff4df;color:#9a6a00}
+  .per-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+  .per-card{border:1px solid var(--line);border-radius:10px;padding:14px}
+  .per-card .pc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+  .per-card .pc-name{font-size:14.5px;font-weight:800;color:var(--black)}
+  .per-card .pc-sub{font-size:12.5px;color:var(--gray);margin-top:2px}
+  .per-card .pc-nums{display:flex;gap:18px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .per-card .pc-num b{display:block;font-size:16px;color:var(--black)}
+  .per-card .pc-num span{font-size:11px;color:var(--gray);font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+  .per-card .pc-link{font-size:12px;color:var(--petrol);font-weight:700;margin-top:10px;display:inline-block}
+  .filter-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+  .filter-row select{padding:9px 12px;border:1px solid #d9d9dd;border-radius:8px;font:inherit;font-size:13px;background:var(--white)}
+  .filter-row input[type=date]{padding:8px 10px;border:1px solid #d9d9dd;border-radius:8px;font:inherit;font-size:13px}
+  .hist-table-wrap{overflow-x:auto}
+  .hist-table{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+  .hist-table th,.hist-table td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+  .hist-table thead th{font-size:11.5px;font-weight:800;color:var(--black);border-bottom:2px solid var(--black)}
+  .hist-table td.num{font-variant-numeric:tabular-nums}
+
+  /* Inicio: inventario por tienda (mismo indicador que la app de Inventario) */
+  :root{ --inv-de-linea:#1c1917; --inv-excedente:#eda100; --inv-liquidacion:#1baf7a; --inv-recibir:#4a3aa7; --inv-comprar:#e34948; }
+  .inv-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .inv-legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;color:#55555a}
+  .inv-legend span{display:inline-flex;align-items:center;gap:6px}
+  .inv-legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+  /* Matriz: a la izquierda el acumulado de todas las tiendas, a la derecha cada tienda */
+  .inv-matrix{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:0}
+  .inv-sum{position:relative;background:var(--white);border:2px solid var(--black);border-radius:14px;padding:16px 18px;margin-right:34px}
+  .inv-sum::after{content:"";position:absolute;right:-36px;top:50%;width:34px;border-top:2px solid #c4c4c9}
+  .inv-sum .inv-name{font-size:18px}
+  .inv-sum .inv-bars{margin-top:14px}
+  .inv-sum .inv-free{width:100%;margin-top:12px}
+  .inv-tree{position:relative;padding-left:26px}
+  .inv-tree::before{content:"";position:absolute;left:0;top:44px;bottom:44px;border-left:2px solid #c4c4c9}
+  .inv-row{position:relative;display:grid;grid-template-columns:minmax(120px,170px) auto;justify-content:start;align-items:end;gap:10px 22px;background:var(--white);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+  .inv-row:last-child{margin-bottom:0}
+  .inv-row::before{content:"";position:absolute;left:-28px;top:50%;width:28px;border-top:2px solid #c4c4c9}
+  .inv-row .inv-txt{align-self:end;text-align:right;padding-bottom:30px}
+  .inv-name{font-size:17px;font-weight:800;color:var(--black)}
+  .inv-meta{font-size:12px;color:var(--gray);margin-top:3px}
+  .inv-actions{margin-top:10px;display:flex;gap:14px;flex-wrap:wrap}
+  .inv-bars{display:flex;gap:20px;align-items:flex-end}
+  .inv-col{display:flex;flex-direction:column;align-items:center;gap:6px;width:124px}
+  .inv-total{font-size:18px;font-weight:800;color:var(--black);font-variant-numeric:tabular-nums}
+  .inv-bar{width:100%;display:flex;flex-direction:column-reverse;border-radius:8px;overflow:hidden;background:var(--off)}
+  .inv-seg{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;line-height:1.15;padding:2px 4px;border-top:2px solid var(--white);overflow:hidden;min-height:0}
+  .inv-seg:first-child{border-top:0}
+  .inv-seg b{font-size:12.5px;font-variant-numeric:tabular-nums}
+  .inv-seg small{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;opacity:.92}
+  .inv-seg.tiny small{display:none}
+  .inv-seg.de_linea{background:var(--inv-de-linea)} .inv-seg.excedente{background:var(--inv-excedente)}
+  .inv-seg.liquidacion{background:var(--inv-liquidacion)} .inv-seg.recibir{background:var(--inv-recibir)} .inv-seg.comprar{background:var(--inv-comprar)}
+  .inv-free{grid-column:2;justify-self:stretch;max-width:100%;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 10px;background:#fff6e0;border:1px solid #f1d9a0;border-radius:10px;padding:10px 14px}
+  .inv-free span{font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:#8a5a00}
+  .inv-free b{font-size:18px;font-weight:800;color:#8a5a00;font-variant-numeric:tabular-nums}
+  .inv-free small{flex-basis:100%;font-size:11.5px;color:#8a6a2a}
+  .inv-lbl{font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--gray);text-align:center}
+  .inv-empty{width:268px;max-width:100%;border:1px dashed #d4d4d8;border-radius:10px;padding:26px 14px;text-align:center;color:var(--gray);font-size:13px}
+  .inv-form{grid-column:1 / -1;border-top:1px solid var(--line);padding-top:14px;margin-top:4px}
+  .inv-form .t-form{grid-template-columns:repeat(3,1fr)}
+  .inv-form .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+  @media (max-width:760px){
+    .inv-matrix{grid-template-columns:1fr}
+    .inv-sum{margin:0 0 22px}
+    .inv-sum::after{right:auto;left:50%;top:auto;bottom:-24px;width:0;height:22px;border-top:0;border-left:2px solid #c4c4c9}
+    .inv-tree{padding-left:18px}
+    .inv-tree::before{top:0}
+    .inv-row::before{left:-20px;width:20px}
+    .inv-row{grid-template-columns:1fr}
+    .inv-row .inv-txt{text-align:left;padding-bottom:0}
+    .inv-bars{justify-content:center;gap:16px}
+    .inv-col{width:130px}
+    .inv-empty{width:100%}
+    .inv-free{grid-column:1;width:100%}
+    .inv-form .t-form{grid-template-columns:1fr 1fr}
+  }
+
+  /* Bloques clicables y panel de detalle por producto (a la derecha) */
+  .inv-seg[data-cat]{cursor:pointer;transition:filter .12s, box-shadow .12s}
+  .inv-seg[data-cat]:hover{filter:brightness(1.12)}
+  .inv-seg[data-cat]:focus-visible{outline:2px solid var(--petrol);outline-offset:-2px}
+  .inv-seg.sel{box-shadow:inset 0 0 0 3px #fff, inset 0 0 0 5px var(--petrol)}
+  .inv-hint{font-size:12px;color:var(--gray);margin:-6px 0 12px}
+  /* Pantalla angosta: la lista se abre como panel deslizable desde la derecha */
+  .det{position:fixed;top:var(--top-h);right:0;bottom:0;width:min(520px,100vw);background:var(--white);border-left:1px solid var(--line);box-shadow:-12px 0 30px rgba(0,0,0,.14);z-index:50;display:flex;flex-direction:column;transform:translateX(105%);transition:transform .22s ease}
+  .det.open{transform:none}
+  /* Pantalla ancha: tres columnas — Inventario total | Inventario por tienda | Lista (siempre visible a la derecha) */
+  @media (min-width:1280px){
+    .inv-layout{display:grid;grid-template-columns:minmax(0,1fr) clamp(340px,28vw,460px);gap:18px;align-items:start}
+    .det{position:sticky;top:0;height:calc(100vh - var(--top-h) - 48px);width:auto;transform:none;transition:none;z-index:1;box-shadow:none;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+    .det .det-close{display:inline-flex;align-items:center;justify-content:center}
+    .inv-layout .inv-col{width:104px}
+    .inv-layout .inv-bars{gap:14px}
+    .inv-layout .inv-sum{padding:14px;margin-right:30px}
+    .inv-layout .inv-sum::after{right:-32px;width:30px}
+    .inv-layout .inv-row{grid-template-columns:minmax(100px,140px) auto;gap:10px 16px;padding:14px}
+    .inv-layout .inv-empty{width:222px}
+    .inv-layout .inv-seg b{font-size:11.5px}
+    .inv-layout .inv-seg small{font-size:8px}
+    .inv-layout .inv-total{font-size:16px}
+    .inv-layout .inv-free b{font-size:16px}
+    .inv-layout .inv-name{font-size:15px}
+    .inv-layout .inv-sum .inv-name{font-size:17px}
+  }
+  .det-head{padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+  .det-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .det-kicker{font-size:11px;font-weight:800;letter-spacing:1px;color:var(--gray);text-transform:uppercase}
+  .det-title{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:800;color:var(--black);margin-top:2px}
+  .det-title i{width:12px;height:12px;border-radius:3px;display:inline-block}
+  .det-close{width:32px;height:32px;border:1px solid var(--line);border-radius:8px;background:var(--white);cursor:pointer;font-size:18px;line-height:1;color:var(--black)}
+  .det-close:hover{border-color:var(--black)}
+  .det-sum{display:flex;gap:22px;margin-top:12px}
+  .det-sum div span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--gray)}
+  .det-sum div b{font-size:18px;color:var(--black);font-variant-numeric:tabular-nums}
+  .det-search{margin-top:12px;width:100%;padding:9px 12px;border:1px solid #d9d9dd;border-radius:8px;font:inherit;font-size:13px}
+  .det-search:focus{outline:none;border-color:var(--black)}
+  .det-body{flex:1;overflow:auto}
+  .det-table{width:100%;border-collapse:collapse;font-size:12.5px}
+  .det-table th{position:sticky;top:0;background:var(--off);text-align:left;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:#55555a;padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;user-select:none}
+  .det-table th.num,.det-table td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .det-table td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  .det-prod{font-weight:700;color:var(--black)}
+  .det-sub{color:var(--gray);font-size:11.5px;margin-top:2px}
+  .det-table tr:nth-child(even) td{background:#fafafa}
+  .det-more{display:block;margin:12px auto 18px}
+  .det-top > div:first-child{flex:1;min-width:0}
+  .det-sum{align-items:center}
+  .det-xls{margin-left:auto;padding:8px 14px;border:1px solid var(--petrol);border-radius:8px;background:var(--white);color:var(--petrol);font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap}
+  .det-xls:hover{background:var(--petrol);color:var(--white)}
+  .det-nota{padding:12px 14px 16px;font-size:12px;color:var(--gray);text-align:center}
+  .det-nota .link{font-size:12px;color:var(--petrol)}
+  .det-table{table-layout:fixed}
+  .det-table th,.det-table td{padding:8px 7px}
+  .det-table th:first-child,.det-table td:first-child{padding-left:12px}
+  .det-table th:last-child,.det-table td:last-child{padding-right:12px}
+  .det-table th,.det-table th.num{white-space:normal;line-height:1.2;vertical-align:bottom}
+  .det-table .w-cod{width:62px} .det-table .w-num{width:54px} .det-table .w-val{width:72px}
+  .det-prod{font-size:12px;line-height:1.25;word-break:break-word}
+  .det-tools{display:flex;gap:8px;margin-top:12px}
+  .det-tools select{flex:0 1 46%;min-width:0;padding:9px 10px;border:1px solid #d9d9dd;border-radius:8px;font:inherit;font-size:13px;background:var(--white)}
+  .det-tools .det-search{margin-top:0;flex:1;min-width:0}
+  .det-cod{font-variant-numeric:tabular-nums;color:#55555a;white-space:nowrap;font-size:12px}
+  .det-dif{font-size:10.5px;font-weight:800}
+  .det-dif.mas{color:#b7791f} .det-dif.menos{color:#c03535}
+  .det-empty{padding:40px 18px;text-align:center;color:var(--gray);font-size:13px}
+  .inv-import{grid-column:1 / -1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px dashed #d4d4d8;border-radius:10px;background:var(--off);font-size:12.5px;color:#55555a}
+  .inv-import input[type=file]{font-size:12px}
+
+  /* Celular: el menú se abre como cajón */
+  .scrim{display:none}
+  @media (max-width:760px){
+    .menu-toggle{display:inline-flex}
+    .top .where{display:none}
+    .side{position:fixed;top:var(--top-h);bottom:0;left:0;z-index:40;width:min(86vw,var(--side-w)) !important;transform:translateX(-100%);transition:transform .22s ease;box-shadow:8px 0 24px rgba(0,0,0,.3)}
+    .side.open{transform:none}
+    .side .collapse-btn{display:none}
+    .side.mini .search,.side.mini .lbl,.side.mini .chev,.side.mini .no-results{display:revert !important}
+    .side.mini .nav-item{justify-content:flex-start;padding:8px 10px}
+    .scrim{display:block;position:fixed;inset:var(--top-h) 0 0 0;background:rgba(0,0,0,.4);z-index:30;opacity:0;pointer-events:none;transition:opacity .2s}
+    .scrim.show{opacity:1;pointer-events:auto}
+    .main{padding:16px}
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+</head>
+<body>
+
+<!-- Inicio de sesión -->
+<div class="login" id="login">
+  <div class="login-card">
+    <div class="brand"><div class="word"><b>g</b>enesis</div><div class="tag">IA</div></div>
+    <form class="form" id="loginForm" autocomplete="off">
+      <div class="field">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 9V7a5 5 0 0 0-10 0v2H5v13h14V9h-2zm-8 0V7a3 3 0 0 1 6 0v2H9z"/></svg>
+        <input id="password" type="password" placeholder="Contraseña" required>
+      </div>
+      <button class="btn-in" id="loginBtn" type="submit">Entrar</button>
+      <div class="msg" id="loginMsg"></div>
+    </form>
+  </div>
+  <div class="corner brand"><div class="word"><b>g</b>enesis</div><div class="tag">IA</div></div>
+</div>
+
+<!-- Carga -->
+<div class="loader" id="loader" hidden>
+  <div class="ring">
+    <div class="brand"><div class="word"><b>g</b>enesis</div><div class="tag">IA</div></div>
+    <div class="bar"><i id="barFill"></i></div>
+  </div>
+</div>
+
+<!-- App -->
+<div class="app" id="app" hidden>
+  <header class="top">
+    <button class="icon-btn menu-toggle" id="menuToggle" aria-label="Abrir menú">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="brand"><div class="word"><b>g</b>enesis</div><div class="tag">IA</div></div>
+    <div class="spacer"></div>
+    <div class="where" id="where"></div>
+  </header>
+
+  <div class="body">
+    <aside class="side" id="side">
+      <div class="side-head">
+        <button class="icon-btn collapse-btn" id="collapseBtn" aria-label="Contraer menú" title="Contraer / expandir menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="search">
+          <input id="navSearch" type="search" placeholder="Encontrar" aria-label="Buscar en el menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        </div>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="side-foot" id="sideFoot"></div>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+
+    <main class="main">
+      <h1 class="page-title" id="pageTitle">Inicio</h1>
+      <p class="page-sub" id="pageSub">Bienvenido a Genesis</p>
+      <div class="placeholder" id="pageBody">Esta sección está lista para construirse.</div>
+    </main>
+  </div>
+</div>
+
+<script>
+  const FN_URL = "https://gbiectjjqhbfolnjljoe.supabase.co/functions/v1/analizar-solicitud";
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let CODE = null;
+
+  const store = (area) => ({
+    get(k){ try { return window[area].getItem(k); } catch { return null; } },
+    set(k,v){ try { window[area].setItem(k, v); } catch {} },
+    del(k){ try { window[area].removeItem(k); } catch {} }
+  });
+  const ss = store('sessionStorage'), ls = store('localStorage');
+
+  async function api(accion, extra = {}){
+    const r = await fetch(FN_URL, {
+      method: 'POST',
+      headers: { 'x-access-code': CODE, 'content-type': 'application/json' },
+      body: JSON.stringify({ accion, ...extra })
+    });
+    const data = await r.json().catch(() => ({ error: `Error ${r.status}` }));
+    if (!r.ok || data.error) { const e = new Error(data.error || `Error ${r.status}`); e.status = r.status; throw e; }
+    return data;
+  }
+
+  // ===== Iconos (línea, blanco y negro) =====
+  const I = {
+    home:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+    doc:'<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/>',
+    users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14c2.8 0 5 2.2 5 5"/>',
+    book:'<path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M4 17a3 3 0 0 1 3-3h11"/>',
+    cake:'<path d="M4 20h16v-7H4z"/><path d="M4 15c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 4 0"/><path d="M12 13V9"/><path d="M12 6.5c.8-.8.8-1.7 0-2.5-.8.8-.8 1.7 0 2.5z"/>',
+    chart:'<path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/>',
+    ai:'<rect x="5" y="7" width="14" height="12" rx="3"/><path d="M12 3v4"/><circle cx="9.5" cy="13" r="1.2"/><circle cx="14.5" cy="13" r="1.2"/><path d="M2 12v3M22 12v3"/>',
+    gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+    help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/>',
+    out:'<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/>',
+  };
+  const svg = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${I[n]}</svg>`;
+  const CHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+
+  // ===== Estructura del menú (edítala aquí) =====
+  const MENU = [
+    { id:'inicio', label:'Inicio', icon:'home' },
+    { id:'solicitudes', label:'Solicitudes', icon:'doc', children:[
+      { id:'sol-subir', label:'Subir solicitud' },
+      { id:'sol-pendientes', label:'Por revisar' },
+    ]},
+    { id:'personal', label:'Personal', icon:'users', children:[
+      { id:'per-lista', label:'Lista de personal' },
+      { id:'per-historial', label:'Historial y nómina' },
+    ]},
+    { id:'catalogos', label:'Catálogos', icon:'book', children:[
+      { id:'cat-empleados', label:'Empleados' },
+      { id:'cat-puestos', label:'Puestos' },
+      { id:'cat-departamentos', label:'Departamentos' },
+    ]},
+    { id:'reportes', label:'Reportes', icon:'chart' },
+    { sep:true },
+    { id:'config', label:'Configuración', icon:'gear' },
+    { id:'ayuda', label:'Ayuda', icon:'help' },
+  ];
+  const FOOT = { id:'salir', label:'Salir', icon:'out' };
+
+  const findItem = id => { for (const m of MENU) { if (m.id === id) return { item:m }; for (const c of (m.children||[])) if (c.id === id) return { item:c, parent:m }; } return null; };
+
+  function renderMenu(filter = ''){
+    const f = filter.trim().toLowerCase();
+    const match = s => !f || s.toLowerCase().includes(f);
+    // Globo de texto al pasar el mouse: solo con el menú contraído (cuando no se ven los nombres)
+    const mini = $('side').classList.contains('mini') && !isMobile();
+    const tt = label => mini ? ` title="${esc(label)}"` : '';
+    let html = '', count = 0;
+    for (const m of MENU) {
+      if (m.sep) { if (!f) html += '<div class="nav-sep"></div>'; continue; }
+      const kids = (m.children || []).filter(c => match(c.label) || match(m.label));
+      if (!match(m.label) && !kids.length) continue;
+      count++;
+      if (m.children) {
+        const open = f ? true : openGroups.has(m.id);
+        html += `<div class="group${open ? ' open' : ''}" data-group="${m.id}">
+          <button class="nav-item" data-toggle="${m.id}"${tt(m.label)} aria-expanded="${open}"><span class="ico">${svg(m.icon)}</span><span class="lbl">${esc(m.label)}</span>${CHEV}</button>
+          <div class="sub">${kids.map(c => `<button class="nav-item${c.id === current ? ' active' : ''}" data-go="${c.id}"><span class="lbl">${esc(c.label)}</span></button>`).join('')}</div>
+        </div>`;
+      } else {
+        html += `<button class="nav-item${m.id === current ? ' active' : ''}" data-go="${m.id}"${tt(m.label)}><span class="ico">${svg(m.icon)}</span><span class="lbl">${esc(m.label)}</span></button>`;
+      }
+    }
+    if (!count) html = '<div class="no-results">Sin resultados</div>';
+    $('nav').innerHTML = html;
+  }
+
+  let current = 'inicio';
+  const openGroups = new Set();
+
+  function go(id){
+    const found = findItem(id); if (!found) return;
+    current = id;
+    if (found.parent) openGroups.add(found.parent.id);
+    renderMenu($('navSearch').value);
+    const ruta = found.parent ? `${found.parent.label} › ${found.item.label}` : found.item.label;
+    $('pageTitle').textContent = found.item.label;
+    $('pageSub').textContent = id === 'inicio' ? 'Bienvenido a Genesis' : ruta;
+    $('where').textContent = ruta;
+    const vista = VISTAS[id];
+    const body = $('pageBody');
+    if (vista) { body.className = ''; vista(body); }
+    else { body.className = 'placeholder'; body.textContent = 'Esta sección está lista para construirse.'; }
+    closeDrawer();
+  }
+
+  // ===== Tiendas =====
+  let TIENDAS = null;
+  async function getTiendas(force){
+    if (!TIENDAS || force) { const { tiendas = [] } = await api('tiendas_listar'); TIENDAS = tiendas; }
+    return TIENDAS;
+  }
+  const loading = el => el.innerHTML = '<div class="placeholder"><span class="spin-sm"></span>Cargando…</div>';
+  const fail = (el, e) => { if (e.status === 401) return showLogin('Sesión expirada, vuelve a entrar'); el.innerHTML = `<div class="placeholder" style="color:#c03535">${esc(e.message)}</div>`; };
+
+  // ===== Selección de tiendas (varias) =====
+  function getSel(){
+    try { const a = JSON.parse(ls.get('genesis_tiendas') || 'null'); if (Array.isArray(a)) return a; } catch {}
+    const viejo = ls.get('genesis_tienda'); // compatibilidad con la versión de una sola tienda
+    return viejo ? [viejo] : [];
+  }
+  const setSel = ids => { ls.set('genesis_tiendas', JSON.stringify(ids)); ls.del('genesis_tienda'); };
+
+  // ===== Distancia desde tu ubicación =====
+  const PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+
+  // Pide permiso de ubicación al usuario (se recuerda 10 min en la sesión)
+  function miUbicacion(){
+    try { const c = JSON.parse(ss.get('genesis_pos') || 'null'); if (c && Date.now() - c.t < 600000) return Promise.resolve(c); } catch {}
+    return new Promise((ok, no) => {
+      if (!('geolocation' in navigator)) return no({ code: 'nosoporta' });
+      navigator.geolocation.getCurrentPosition(
+        p => { const c = { lat: p.coords.latitude, lng: p.coords.longitude, t: Date.now() }; ss.set('genesis_pos', JSON.stringify(c)); ok(c); },
+        e => no(e),
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+      );
+    });
+  }
+
+  // Convierte la dirección escrita en coordenadas (OpenStreetMap). Se guarda en caché por dirección.
+  const normDir = s => String(s || '')
+    .replace(/\bN[°ºo]\.?\s*/gi, '').replace(/#\s*/g, '')
+    .replace(/^C\.\s+/i, 'Calle ').replace(/\bVer\.?(?=\s|,|$)/gi, 'Veracruz')
+    .replace(/\s+/g, ' ').trim();
+  let geoCola = Promise.resolve(); // OpenStreetMap pide máx. 1 consulta por segundo
+  function buscarCoords(q){
+    const tarea = geoCola.then(async () => {
+      const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&accept-language=es&q=' + encodeURIComponent(q);
+      const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!r.ok) throw new Error('geo ' + r.status);
+      const [hit] = await r.json();
+      await new Promise(res => setTimeout(res, 1100));
+      return hit ? { lat: +hit.lat, lng: +hit.lon } : null;
+    });
+    geoCola = tarea.catch(() => {});
+    return tarea;
+  }
+  async function coordsTienda(t){
+    const llave = 'genesis_geo:' + (t.ubicacion || '') + '|' + (t.nombre || '');
+    try { const c = JSON.parse(ls.get(llave) || 'null'); if (c) return c; } catch {}
+    const dir = normDir(t.ubicacion), ciudad = normDir(t.nombre);
+    // 1) dirección + nombre de la tienda (suele traer la ciudad), 2) solo dirección, 3) solo la ciudad (aproximado)
+    const intentos = [];
+    if (dir && ciudad) intentos.push([`${dir}, ${ciudad}`, false]);
+    if (dir) intentos.push([dir, false]);
+    if (ciudad) intentos.push([ciudad, true]);
+    for (const [q, aprox] of intentos) {
+      const c = await buscarCoords(q).catch(() => null);
+      if (c) { const r = { ...c, aprox }; ls.set(llave, JSON.stringify(r)); return r; }
+    }
+    return null;
+  }
+  function kmEntre(a, b){
+    const R = 6371, rad = x => x * Math.PI / 180;
+    const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+    const h = Math.sin(dLat/2)**2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+  const fmtDist = km => km < 1 ? `${Math.round(km * 1000)} m` : km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km).toLocaleString('es-MX')} km`;
+  const DIST = {}; // id de tienda → { km, min, recta } (para la comparativa)
+
+  // Distancia y tiempo por carretera (OSRM / OpenStreetMap, en auto)
+  async function rutaCarretera(a, b){
+    const url = `https://router.project-osrm.org/route/v1/driving/${a.lng},${a.lat};${b.lng},${b.lat}?overview=false&alternatives=false`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('ruta ' + r.status);
+    const d = await r.json();
+    const ruta = d.code === 'Ok' && d.routes && d.routes[0];
+    if (!ruta) throw new Error('sin ruta');
+    return { km: ruta.distance / 1000, min: ruta.duration / 60 };
+  }
+  const fmtTiempo = m => m < 60 ? `${Math.round(m)} min` : `${Math.floor(m / 60)} h ${String(Math.round(m % 60)).padStart(2, '0')} min`;
+
+  async function pintarDistancias(el, tiendas, alCambiar){
+    const poner = (id, html, off) => el.querySelectorAll(`[data-dist="${id}"]`).forEach(s => { s.innerHTML = PIN + html; s.classList.toggle('off', !!off); });
+    let yo;
+    try { yo = await miUbicacion(); }
+    catch (e) {
+      const txt = e.code === 1 ? 'Ubicación no permitida' : e.code === 'nosoporta' ? 'Ubicación no disponible' : 'No se pudo obtener tu ubicación';
+      tiendas.forEach(t => poner(t.id, `${txt} · <button type="button" class="link" data-reintentar style="font-size:12px">Reintentar</button>`, true));
+      el.querySelectorAll('[data-reintentar]').forEach(b => b.onclick = ev => { ev.preventDefault(); ev.stopPropagation(); ss.del('genesis_pos'); tiendas.forEach(t => poner(t.id, 'Calculando distancia…', true)); pintarDistancias(el, tiendas, alCambiar); });
+      return;
+    }
+    for (const t of tiendas) {
+      if (!t.ubicacion && !t.nombre) { poner(t.id, 'Sin dirección', true); continue; }
+      const c = await coordsTienda(t);
+      if (!c) { poner(t.id, 'Dirección no encontrada', true); continue; }
+      let d;
+      try { d = { ...(await rutaCarretera(yo, c)), recta: false }; }
+      catch { d = { km: kmEntre(yo, c), min: null, recta: true }; } // si falla el servicio de rutas: línea recta
+      DIST[t.id] = { ...d, aprox: c.aprox };
+      poner(t.id, `a ${c.aprox ? '≈ ' : ''}${fmtDist(d.km)} Dist.${d.recta ? ' (línea recta)' : ''}`);
+      if (alCambiar) alCambiar();
+    }
+  }
+
+  // ===== Checador: horas y nómina (Personal) =====
+  const fmtHoras = h => h == null ? '—' : (() => { let hh = Math.floor(h), mm = Math.round((h - hh) * 60); if (mm === 60) { hh++; mm = 0; } return `${hh}h ${String(mm).padStart(2, '0')}m`; })();
+  const fmtDinero = v => v == null || isNaN(v) ? '—' : '$' + Number(v).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtFechaCorta = iso => iso ? new Date(iso).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) : '—';
+  const fmtHoraCorta = iso => iso ? new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '—';
+  const fmtAntiguedad = fi => {
+    if (!fi) return '—';
+    const ms = Date.now() - new Date(fi + 'T00:00:00').getTime();
+    const dias = Math.floor(ms / 86400000);
+    if (dias < 30) return `${dias} día(s)`;
+    const meses = Math.floor(dias / 30.44);
+    if (meses < 12) return `${meses} mes(es)`;
+    const anios = Math.floor(meses / 12);
+    const restoMeses = meses % 12;
+    return restoMeses ? `${anios} año(s) ${restoMeses} mes(es)` : `${anios} año(s)`;
+  };
+
+  let EMPLEADOS = null;
+  async function getEmpleados(force){ if (!EMPLEADOS || force) { const { empleados = [] } = await api('empleados_listar'); EMPLEADOS = empleados; } return EMPLEADOS; }
+  let CHECADOR_WORKERS = null;
+  async function getChecadorWorkers(force){ if (!CHECADOR_WORKERS || force) { const { workers = [] } = await api('checador_workers_listar'); CHECADOR_WORKERS = workers; } return CHECADOR_WORKERS; }
+
+  // ===== Indicadores de reportes =====
+  // Agrega aquí cada indicador conforme se desarrolle; aparece solo en el reporte y en la comparativa.
+  //   valor(tienda, datos) → número o null · mejor: 'max' | 'min' (para marcar al ganador) · fmt: cómo se muestra
+  const INDICADORES = [
+    // { id:'ventas', grupo:'Ventas', label:'Ventas del mes', mejor:'max', fmt: v => '$' + v.toLocaleString('es-MX'), valor: (t, d) => d.ventas },
+    { id:'inv_total', grupo:'Inventario', label:'Inventario total', fmt: v => fmtPesos(v), valor: t => t.inventario ? invTotales(t.inventario).actual : null },
+    { id:'inv_ideal', grupo:'Inventario', label:'Inventario ideal', fmt: v => fmtPesos(v), valor: t => t.inventario ? invTotales(t.inventario).ideal : null },
+    { id:'inv_liberar', grupo:'Inventario', label:'Dinero a liberar', mejor:'min', fmt: v => fmtPesos(v), valor: t => t.inventario ? invTotales(t.inventario).liberar : null },
+    { id:'inv_sobra', grupo:'Inventario', label:'Te sobra', mejor:'min', fmt: v => fmtPesos(v), valor: t => t.inventario ? +t.inventario.excedente || 0 : null },
+    { id:'inv_comprar', grupo:'Inventario', label:'Falta comprar', mejor:'min', fmt: v => fmtPesos(v), valor: t => t.inventario ? +t.inventario.comprar || 0 : null },
+  ];
+
+  // ===== Inventario por tienda =====
+  // Segmentos en el orden en que se apilan (de abajo hacia arriba), igual que en la app de Inventario
+  const INV_SEG = {
+    de_linea:    { label:'Stock normal' },
+    excedente:   { label:'Te sobra' },
+    liquidacion: { label:'En descuento' },
+    recibir:     { label:'En camino' },
+    comprar:     { label:'Falta comprar' },
+  };
+  const INV_ACTUAL = ['de_linea', 'excedente', 'liquidacion'];       // Inventario total
+  const INV_IDEAL  = ['de_linea', 'recibir', 'comprar'];             // Inventario ideal: sin lo que sobra ni lo que está en descuento
+  const fmtPesos = v => '$' + Math.round(v || 0).toLocaleString('es-MX');
+  const invTotales = inv => {
+    // Cada bloque se redondea a pesos antes de sumar, para que el total sea exactamente la suma de lo que se ve
+    const suma = ks => ks.reduce((s, k) => s + Math.round(+inv[k] || 0), 0);
+    return { actual: suma(INV_ACTUAL), ideal: suma(INV_IDEAL), liberar: suma(['excedente', 'liquidacion']) };
+  };
+  const fmtFechaLarga = f => f ? new Date(f + 'T00:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+
+  // Dibuja una barra apilada; escala = píxeles por peso (común a todas las tiendas para poder compararlas)
+  function barraInv(inv, keys, escala, label, mas, ref){
+    const total = keys.reduce((s, k) => s + Math.round(+inv[k] || 0), 0);
+    const segs = keys.map(k => {
+      const v = +inv[k] || 0;
+      // Los bloques en cero se muestran delgados (como "En camino $0") para que se sepa que existen
+      const h = v > 0 ? Math.max(22, v * escala) : (k === 'recibir' ? 22 : 0);
+      if (!h) return '';
+      const clic = ref ? ` data-ref="${ref}" data-cat="${k}" tabindex="0" role="button" aria-label="Ver productos de ${INV_SEG[k].label}"` : '';
+      return `<div class="inv-seg ${k}${h < 34 ? ' tiny' : ''}"${clic} style="height:${Math.round(h)}px" title="${INV_SEG[k].label}: ${fmtPesos(v)} — clic para ver productos"><b>${fmtPesos(v)}</b><small>${INV_SEG[k].label}</small></div>`;
+    }).join('');
+    return `<div class="inv-col">
+      <div class="inv-total">${fmtPesos(total)}${mas ? '+' : ''}</div>
+      <div class="inv-bar">${segs}</div>
+      <div class="inv-lbl">${label}</div>
+    </div>`;
+  }
+
+  function tablaComparativa(sel){
+    const fijo = [
+      { label:'Responsable', txt: t => t.responsable || '—' },
+      { label:'Distancia', txt: t => { const d = DIST[t.id]; return d ? `${d.aprox ? '≈ ' : ''}${fmtDist(d.km)}${d.recta ? ' (línea recta)' : ' por carretera'}` : '—'; } },
+      { label:'Tiempo en auto', txt: t => { const d = DIST[t.id]; return d && d.min != null ? `${d.aprox ? '≈ ' : ''}${fmtTiempo(d.min)}` : '—'; } },
+    ];
+    const filasFijas = fijo.map(f => `<tr><th scope="row">${f.label}</th>${sel.map(t => `<td>${esc(f.txt(t))}</td>`).join('')}</tr>`).join('');
+    let filasInd = '', grupo = null;
+    for (const ind of INDICADORES) {
+      if (ind.grupo && ind.grupo !== grupo) { grupo = ind.grupo; filasInd += `<tr class="sec"><td colspan="${sel.length + 1}">${esc(grupo.toUpperCase())}</td></tr>`; }
+      const vals = sel.map(t => { const v = ind.valor(t, t.datos || {}); return typeof v === 'number' && isFinite(v) ? v : null; });
+      const validos = vals.filter(v => v != null);
+      const top = validos.length > 1 ? (ind.mejor === 'min' ? Math.min(...validos) : ind.mejor === 'max' ? Math.max(...validos) : null) : null;
+      filasInd += `<tr><th scope="row">${esc(ind.label)}</th>${vals.map(v => `<td class="num${v != null && v === top ? ' best' : ''}">${v == null ? '—' : esc(ind.fmt ? ind.fmt(v) : v.toLocaleString('es-MX'))}</td>`).join('')}</tr>`;
+    }
+    if (!INDICADORES.length) filasInd = `<tr class="empty"><td colspan="${sel.length + 1}">Los indicadores se agregarán aquí conforme se desarrollen.</td></tr>`;
+    return `<div class="panel" style="margin-top:16px">
+      <div class="panel-title">COMPARATIVA · ${sel.length} TIENDAS</div>
+      <div class="cmp-wrap"><table class="cmp">
+        <thead><tr><th scope="col">Indicador</th>${sel.map(t => `<th scope="col">${esc(t.nombre)}</th>`).join('')}</tr></thead>
+        <tbody>${filasFijas}<tr class="sec"><td colspan="${sel.length + 1}">INDICADORES</td></tr>${filasInd}</tbody>
+      </table></div>
+    </div>`;
+  }
+
+  // ===== Detalle por producto de cada bloque (panel a la derecha) =====
+  // DETALLES[idTienda] = { bloque: [[producto, linea, existencia, valor], ...] }
+  const DETALLES = {};
+  let detCargado = false, detSel = null;
+  async function cargarDetalles(){
+    if (detCargado) return;
+    const { detalles = {} } = await api('tiendas_inventario_detalle');
+    Object.assign(DETALLES, detalles); detCargado = true;
+  }
+  const panelDetalle = () => $('detPanel');
+  // Panel vacío (en pantalla ancha siempre está visible a la derecha)
+  const DET_VACIO = `<div class="det-head"><div class="det-kicker">Detalle por producto</div><div class="det-title">Elige un bloque</div></div>
+    <div class="det-empty">Da clic en cualquier bloque de color de las barras para ver aquí la lista de sus productos.</div>`;
+  function cerrarDetalle(){
+    const d = panelDetalle();
+    if (d) { d.classList.remove('open'); d.innerHTML = DET_VACIO; }
+    detSel = null; marcarSeleccion();
+  }
+  function marcarSeleccion(){
+    document.querySelectorAll('.inv-seg[data-cat]').forEach(sg => sg.classList.toggle('sel', !!detSel && sg.dataset.ref === detSel.ref && sg.dataset.cat === detSel.cat));
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarDetalle(); });
+
+  async function abrirDetalle(ref, cat, tiendas){
+    if (detSel && detSel.ref === ref && detSel.cat === cat) return cerrarDetalle(); // segundo clic: cierra
+    detSel = { ref, cat }; marcarSeleccion();
+    const d = panelDetalle();
+    const esTotal = ref === 'total';
+    const nombre = esTotal ? 'Todas las tiendas' : (tiendas.find(t => t.id === ref) || {}).nombre || '';
+    const color = `var(--inv-${cat.replace('_', '-')})`;
+    const cab = `<div class="det-head"><div class="det-top">
+        <div><div class="det-kicker">Detalle por producto · ${esc(nombre)}</div>
+        <div class="det-title"><i style="background:${color}"></i>${esc(INV_SEG[cat].label)}</div></div>
+        <button class="det-close" id="detClose" aria-label="Cerrar">×</button></div>`;
+    d.innerHTML = cab + `</div><div class="det-empty"><span class="spin-sm"></span>Cargando productos…</div>`;
+    d.classList.add('open');
+    $('detClose').onclick = cerrarDetalle;
+    try { await cargarDetalles(); } catch (e) { if (e.status === 401) return showLogin('Sesión expirada, vuelve a entrar'); d.querySelector('.det-empty').textContent = e.message; return; }
+    if (!detSel || detSel.ref !== ref || detSel.cat !== cat) return; // el usuario ya eligió otro bloque
+
+    // Filas: { cod, prod, lin, act, ideal, val, tienda }
+    // Detalle guardado: [producto, linea, cantidad_en_bloque, valor, codigo, stock_actual, stock_ideal]
+    const fuentes = esTotal ? tiendas.filter(t => t.inventario) : tiendas.filter(t => t.id === ref);
+    const enTienda = ['de_linea', 'excedente', 'liquidacion'].includes(cat);
+    const filas = [];
+    fuentes.forEach(t => (((DETALLES[t.id] || {})[cat]) || []).forEach(r => filas.push({
+      cod: r[4] || '', prod: r[0], lin: normLinea(r[1]),
+      act: r[5] != null ? +r[5] : (enTienda ? +r[2] : null),
+      ideal: r[6] != null ? +r[6] : null,
+      val: +r[3] || 0, cant: +r[2] || 0, tienda: t.nombre,
+    })));
+    const sinDetalle = fuentes.filter(t => !DETALLES[t.id]).map(t => t.nombre);
+    const totalBloque = fuentes.reduce((s, t) => s + Math.round(+(t.inventario || {})[cat] || 0), 0);
+    const lineas = [...filas.reduce((m, f) => m.set(f.lin || '—', (m.get(f.lin || '—') || 0) + 1), new Map())].sort((a, b) => a[0].localeCompare(b[0], 'es'));
+    let orden = { col: 'val', desc: true }, q = '', linea = '';
+    const TOP = 15; // en pantalla solo el top 15; la lista completa va en el Excel
+
+    const vacio = sinDetalle.length === fuentes.length
+      ? `Esta ${esTotal ? 'vista' : 'tienda'} aún no tiene el detalle de productos. Cárgalo en <b>Configuración › Carga de inventario</b>.`
+      : cat === 'recibir' ? 'No hay pedidos pendientes registrados.' : 'Sin productos en este bloque.';
+
+    const esPedido = cat === 'comprar' || cat === 'recibir';
+    d.innerHTML = cab + `
+      <div class="det-sum">
+        <div><span id="detValLbl">Valor del bloque</span><b id="detVal">${fmtPesos(totalBloque)}</b></div>
+        <div><span>Productos</span><b id="detCnt">${filas.length.toLocaleString('es-MX')}</b></div>
+        ${filas.length ? `<button class="det-xls" id="detXls" title="Descarga en Excel la lista completa">${esPedido ? 'Generar pedido' : 'Descargar Excel'}</button>` : ''}
+      </div>
+      ${sinDetalle.length && sinDetalle.length < fuentes.length ? `<div class="muted" style="margin-top:8px;font-size:12px">Sin detalle todavía: ${esc(sinDetalle.join(', '))}</div>` : ''}
+      ${filas.length ? `<div class="det-tools">
+        <select id="detLinea" aria-label="Filtrar por línea"><option value="">Todas las líneas (${lineas.length})</option>${lineas.map(([l, n]) => `<option value="${esc(l)}">${esc(l)} (${n})</option>`).join('')}</select>
+        <input class="det-search" id="detBuscar" type="search" placeholder="Buscar código o producto…">
+      </div>` : ''}
+      </div>
+      <div class="det-body" id="detBody"></div>`;
+    $('detClose').onclick = cerrarDetalle;
+
+    const visibles = () => {
+      const qq = q.trim().toLowerCase();
+      let vis = filas.filter(f => (!linea || (f.lin || '—') === linea) && (!qq || (f.cod + ' ' + f.prod + ' ' + f.lin).toLowerCase().includes(qq)));
+      const c = orden.col;
+      vis.sort((a, b) => {
+        const x = a[c], y = b[c];
+        if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
+        return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y), 'es')) * (orden.desc ? -1 : 1);
+      });
+      return vis;
+    };
+    const fmtN = v => v == null ? '—' : Number(v).toLocaleString('es-MX');
+
+    const pintarFilas = () => {
+      const body = $('detBody');
+      if (!filas.length) { body.innerHTML = `<div class="det-empty">${vacio}</div>`; return; }
+      const vis = visibles();
+      // Resumen: si hay filtro, muestra lo filtrado
+      const filtrado = linea || q.trim();
+      $('detValLbl').textContent = filtrado ? 'Valor (filtro)' : 'Valor del bloque';
+      $('detVal').textContent = fmtPesos(filtrado ? vis.reduce((s, f) => s + f.val, 0) : totalBloque);
+      $('detCnt').textContent = vis.length.toLocaleString('es-MX');
+      const flecha = k => orden.col === k ? (orden.desc ? ' ▼' : ' ▲') : '';
+      body.innerHTML = vis.length ? `<table class="det-table"><thead><tr>
+          <th class="w-cod" data-col="cod">Código${flecha('cod')}</th>
+          <th data-col="prod">Producto${flecha('prod')}</th>
+          <th class="num w-num" data-col="act" title="Piezas que hay hoy en tienda">Stock actual${flecha('act')}</th>
+          <th class="num w-num" data-col="ideal" title="Máximo recomendado para este producto">Stock ideal${flecha('ideal')}</th>
+          <th class="num w-val" data-col="val">Valor${flecha('val')}</th></tr></thead><tbody>
+          ${vis.slice(0, TOP).map(f => {
+            const dif = f.act != null && f.ideal != null ? f.act - f.ideal : null;
+            return `<tr><td class="det-cod">${esc(f.cod || '—')}</td>
+            <td><div class="det-prod">${esc(f.prod)}</div><div class="det-sub">${esc(f.lin || '—')}${esTotal ? ' · ' + esc(f.tienda) : ''}</div></td>
+            <td class="num">${fmtN(f.act)}</td>
+            <td class="num">${fmtN(f.ideal)}${dif ? `<div class="det-dif ${dif > 0 ? 'mas' : 'menos'}">${dif > 0 ? '+' : ''}${fmtN(dif)}</div>` : ''}</td>
+            <td class="num">${fmtPesos(f.val)}</td></tr>`; }).join('')}
+        </tbody></table>
+        ${vis.length > TOP ? `<div class="det-nota">Mostrando el top ${TOP} de ${vis.length.toLocaleString('es-MX')} productos. La lista completa está en <button class="link" id="detXls2">${esPedido ? 'Generar pedido' : 'Descargar Excel'}</button>.</div>` : ''}`
+        : `<div class="det-empty">Ningún producto coincide con el filtro.</div>`;
+      body.querySelectorAll('th[data-col]').forEach(th => th.onclick = () => {
+        const col = th.dataset.col;
+        orden = orden.col === col ? { col, desc: !orden.desc } : { col, desc: !['cod', 'prod'].includes(col) };
+        pintarFilas();
+      });
+      if ($('detXls2')) $('detXls2').onclick = descargar;
+    };
+    if ($('detBuscar')) $('detBuscar').oninput = e => { q = e.target.value; pintarFilas(); };
+    if ($('detLinea')) $('detLinea').onchange = e => { linea = e.target.value; pintarFilas(); };
+    // Descarga la lista tal como se ve (con filtro de línea y búsqueda aplicados)
+    // En "Falta comprar" / "En camino" el Excel es un pedido: lleva la cantidad a pedir de cada producto
+    function descargar(){
+      if (!window.XLSX) return alert('No se pudo cargar el lector de Excel. Revisa tu conexión.');
+      const vis = visibles();
+      const enc = ['Código', 'Producto', 'Línea', ...(esTotal ? ['Tienda'] : []), 'Stock actual', 'Stock ideal',
+        esPedido ? (cat === 'comprar' ? 'Cantidad a pedir' : 'Cantidad en camino') : 'Diferencia', esPedido ? 'Costo' : 'Valor'];
+      const ws = XLSX.utils.aoa_to_sheet([enc, ...vis.map(f => [f.cod, f.prod, f.lin, ...(esTotal ? [f.tienda] : []), f.act, f.ideal,
+        esPedido ? f.cant : (f.act != null && f.ideal != null ? f.act - f.ideal : null), Math.round(f.val * 100) / 100])]);
+      ws['!cols'] = enc.map(h => ({ wch: h === 'Producto' ? 44 : h === 'Tienda' ? 16 : 13 }));
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, INV_SEG[cat].label.slice(0, 31));
+      const limpio = s => sinAcentos(s).replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+      const hoy = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `${cat === 'comprar' ? 'pedido' : limpio(INV_SEG[cat].label)}_${limpio(nombre)}${linea ? '_' + limpio(linea) : ''}_${hoy}.xlsx`);
+    }
+    if ($('detXls')) $('detXls').onclick = descargar;
+    pintarFilas();
+  }
+
+  // ===== Importar detalle desde Excel =====
+  const sinAcentos = s => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const BLOQUE_ALIAS = {
+    de_linea: ['stock normal', 'de linea', 'normal', 'en rango'],
+    excedente: ['te sobra', 'excedente', 'sobra', 'excedente de linea', 'sobre maximo'],
+    liquidacion: ['en descuento', 'descuento', 'liquidacion'],
+    recibir: ['en camino', 'por recibir', 'recibir', 'camino'],
+    comprar: ['falta comprar', 'por comprar', 'comprar'],
+  };
+  const bloqueDe = txt => { const t = sinAcentos(txt); for (const [k, al] of Object.entries(BLOQUE_ALIAS)) if (al.includes(t)) return k; return null; };
+  const num = v => typeof v === 'number' ? v : Number(String(v ?? '').replace(/[$,\s]/g, '')) || 0;
+  // Línea = marca: "TINTE KUUL" es la misma línea que "KUUL" (se quita el prefijo TINTE)
+  // Xiomara SA (sin amoniaco) es la misma marca que Xiomara; el producto conserva "S/A" en su nombre
+  const LINEA_ALIAS = { 'XIOMARA SA': 'XIOMARA' };
+  const normLinea = l => { const x = String(l ?? '').trim().replace(/^TINTES?\s+/i, '').toUpperCase(); return LINEA_ALIAS[x] || x; };
+
+  async function leerDetalleExcel(file){
+    if (!window.XLSX) throw new Error('No se pudo cargar el lector de Excel. Revisa tu conexión y vuelve a intentar.');
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+    const filas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+    if (!filas.length) throw new Error('El archivo está vacío.');
+    // Ubica las columnas por nombre (sin importar mayúsculas o acentos)
+    const cols = Object.keys(filas[0]);
+    const col = (...nombres) => cols.find(c => nombres.includes(sinAcentos(c)));
+    const cB = col('bloque', 'categoria', 'estado'), cP = col('producto', 'descripcion', 'articulo'),
+          cL = col('linea', 'marca'), cC = col('codigo', 'clave', 'sku', 'cod'),
+          cA = col('stock actual', 'existencia', 'stock', 'existencias'), cI = col('stock ideal', 'ideal', 'maximo', 'stock maximo'),
+          cQ = col('cantidad en bloque', 'cantidad', 'piezas', 'unidades', 'por comprar'), cV = col('valor', 'importe', 'costo', 'monto');
+    if (!cB || !cP || !cV) throw new Error('Faltan columnas. El Excel debe tener: Bloque, Código, Producto, Línea, Stock actual, Stock ideal y Valor. Usa la plantilla.');
+    const det = { de_linea: [], excedente: [], liquidacion: [], recibir: [], comprar: [] };
+    const malos = new Set();
+    const opc = (c, f) => c && String(f[c]).trim() !== '' ? num(f[c]) : null;
+    filas.forEach(f => {
+      if (!String(f[cP]).trim()) return;
+      const k = bloqueDe(f[cB]);
+      if (!k) { if (String(f[cB]).trim()) malos.add(String(f[cB]).trim()); return; }
+      const act = opc(cA, f), ideal = opc(cI, f), cant = opc(cQ, f);
+      // [producto, linea, cantidad_en_bloque, valor, codigo, stock_actual, stock_ideal]
+      det[k].push([String(f[cP]).trim(), cL ? normLinea(f[cL]) : '', cant ?? act ?? 0, num(f[cV]), cC ? String(f[cC]).trim() : '', act, ideal]);
+    });
+    if (!Object.values(det).some(a => a.length)) throw new Error('No se encontró ningún producto con un Bloque válido (Stock normal, Te sobra, En descuento, En camino o Falta comprar).');
+    if (malos.size) throw new Error(`Bloque no reconocido: ${[...malos].slice(0, 3).join(', ')}. Usa: Stock normal, Te sobra, En descuento, En camino o Falta comprar.`);
+    return det;
+  }
+  function descargarPlantilla(){
+    if (!window.XLSX) return alert('No se pudo cargar el lector de Excel. Revisa tu conexión.');
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Bloque', 'Código', 'Producto', 'Línea', 'Stock actual', 'Stock ideal', 'Cantidad en bloque', 'Valor'],
+      ['Stock normal', '000123', 'Ejemplo: Shampoo 300 ml', 'MARCA', 12, 12, 12, 1500],
+      ['Te sobra', '000456', 'Ejemplo: Tratamiento 250 ml', 'MARCA', 40, 10, 30, 3900],
+      ['En descuento', '000789', 'Ejemplo: Mascarilla 350 g', 'MARCA', 8, 0, 8, 900],
+      ['Falta comprar', '000321', 'Ejemplo: Tinte 60 ml', 'MARCA', 2, 8, 6, 480],
+    ]);
+    ws['!cols'] = [{ wch: 14 }, { wch: 10 }, { wch: 40 }, { wch: 16 }, { wch: 12 }, { wch: 11 }, { wch: 17 }, { wch: 12 }];
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
+    XLSX.writeFile(wb, 'plantilla_inventario_tienda.xlsx');
+  }
+
+  // ===== Configuración › Carga de inventario por tienda (solo administrador) =====
+  async function panelCargaInventario(cont, elegida){
+    let tiendas;
+    try { tiendas = await getTiendas(); } catch (e) { return fail(cont, e); }
+    if (!tiendas.length) { cont.innerHTML = '<div class="panel-title">CARGA DE INVENTARIO</div><div class="placeholder">Primero agrega una tienda.</div>'; return; }
+    const t = tiendas.find(x => x.id === elegida) || tiendas[0];
+    const inv = t.inventario || {};
+    const hoy = new Date().toISOString().slice(0, 10);
+    let detalleNuevo; // detalle leído del Excel, pendiente de guardar
+    cont.innerHTML = `<div class="panel-title">CARGA DE INVENTARIO</div>
+      <form class="inv-form" id="invForm" autocomplete="off" style="border:0;padding-top:0;margin-top:0">
+        <div class="t-form">
+          <label class="span2">Tienda
+            <select id="invTienda" style="padding:9px 12px;border:1px solid #d9d9dd;border-radius:8px;font:inherit;font-size:14px;width:100%">
+              ${tiendas.map(x => `<option value="${x.id}" ${x.id === t.id ? 'selected' : ''}>${esc(x.nombre)}${x.inventario_fecha ? ' · corte ' + esc(fmtFechaLarga(x.inventario_fecha)) : ' · sin corte'}</option>`).join('')}
+            </select></label>
+          <div class="inv-import">
+            <b>Detalle de productos (Excel):</b>
+            <input type="file" id="invArchivo" accept=".xlsx,.xls,.csv">
+            <button type="button" class="link" id="invPlantilla">Descargar plantilla</button>
+            <span id="invImpMsg" style="flex-basis:100%">Columnas: Bloque, Código, Producto, Línea, Stock actual, Stock ideal, Cantidad en bloque y Valor. Al subirlo, los totales se llenan solos y cada bloque de Inicio muestra su lista.</span>
+          </div>
+          ${Object.entries(INV_SEG).map(([k, sg]) => `<label><span><i class="sw" style="background:var(--inv-${k.replace('_', '-')})"></i>${sg.label} (pesos)</span>
+            <input name="${k}" inputmode="decimal" value="${inv[k] != null ? Math.round(inv[k]) : ''}" placeholder="0"></label>`).join('')}
+          <label>Fecha del corte<input name="fecha" type="date" value="${esc(t.inventario_fecha || hoy)}"></label>
+        </div>
+        <div class="t-actions" style="margin-top:8px">
+          <button class="btn-dark" id="invSave" type="submit">Guardar inventario</button>
+          <span class="form-msg" id="invMsg"></span>
+        </div>
+      </form>`;
+    const f = cont.querySelector('#invForm');
+    f.querySelector('#invTienda').onchange = e => panelCargaInventario(cont, e.target.value);
+    f.querySelector('#invPlantilla').onclick = descargarPlantilla;
+    f.querySelector('#invArchivo').onchange = async ev => {
+      const file = ev.target.files[0]; if (!file) return;
+      const msg = f.querySelector('#invImpMsg');
+      msg.style.color = ''; msg.textContent = 'Leyendo archivo…';
+      try {
+        const det = await leerDetalleExcel(file);
+        detalleNuevo = det;
+        Object.keys(INV_SEG).forEach(k => f.querySelector(`[name=${k}]`).value = Math.round((det[k] || []).reduce((s, r) => s + r[3], 0)));
+        const n = Object.values(det).reduce((s, a) => s + a.length, 0);
+        msg.textContent = `${n.toLocaleString('es-MX')} productos leídos. Los totales se llenaron solos; revisa y da Guardar inventario.`;
+      } catch (e) { detalleNuevo = undefined; msg.style.color = '#c03535'; msg.textContent = e.message; }
+    };
+    f.onsubmit = async ev => {
+      ev.preventDefault();
+      const btn = f.querySelector('#invSave'), msg = f.querySelector('#invMsg');
+      btn.disabled = true; msg.style.color = ''; msg.textContent = '';
+      const inventario = {};
+      Object.keys(INV_SEG).forEach(k => inventario[k] = Number(String(f.querySelector(`[name=${k}]`).value).replace(/[$,\s]/g, '')) || 0);
+      try {
+        const cuerpo = { id: t.id, inventario, fecha: f.querySelector('[name=fecha]').value };
+        if (detalleNuevo) cuerpo.detalle = detalleNuevo;
+        const { tienda } = await api('tiendas_inventario_guardar', cuerpo);
+        TIENDAS = tiendas.map(x => x.id === tienda.id ? { ...x, ...tienda } : x);
+        if (detalleNuevo) DETALLES[tienda.id] = detalleNuevo;
+        await panelCargaInventario(cont, t.id);
+        const m2 = cont.querySelector('#invMsg'); m2.style.color = '#1e7a43'; m2.textContent = `Inventario de ${tienda.nombre} guardado. Ya se ve en Inicio.`;
+      } catch (e) { msg.style.color = '#c03535'; msg.textContent = e.message; btn.disabled = false; }
+    };
+  }
+
+  const VISTAS = {
+    // Inicio: cada tienda con su indicador de inventario (total hoy vs. ideal)
+    async inicio(el){
+      loading(el);
+      let tiendas;
+      try { tiendas = await getTiendas(true); } catch (e) { return fail(el, e); }
+      if (!tiendas.length) {
+        el.innerHTML = `<div class="placeholder">Aún no hay tiendas. Agrégalas en <button class="link" id="goConfig">Configuración</button>.</div>`;
+        $('goConfig').onclick = () => go('config');
+        return;
+      }
+      // Estructura fija: a la izquierda las barras (se redibujan), a la derecha la lista de productos
+      el.innerHTML = `<div class="inv-layout"><div id="invLeft"></div><aside class="det" id="detPanel" aria-label="Detalle por producto">${DET_VACIO}</aside></div>`;
+      detSel = null;
+
+      // Acumulado: suma de cada bloque de todas las tiendas con inventario capturado
+      const tarjetaTotal = () => {
+        const con = tiendas.filter(t => t.inventario);
+        const suma = {};
+        Object.keys(INV_SEG).forEach(k => suma[k] = con.reduce((s, t) => s + Math.round(+t.inventario[k] || 0), 0)); // suma de lo que muestra cada tienda
+        const x = invTotales(suma);
+        const escala = 260 / Math.max(1, x.actual, x.ideal);
+        const fechas = con.map(t => t.inventario_fecha).filter(Boolean).sort();
+        return `<div class="inv-sum">
+          <div class="inv-name">Inventario total</div>
+          <div class="inv-meta">${con.length} de ${tiendas.length} tienda(s) con inventario${fechas.length ? ` · último corte ${esc(fmtFechaLarga(fechas[fechas.length - 1]))}` : ''}</div>
+          ${con.length ? `<div class="inv-bars">${barraInv(suma, INV_ACTUAL, escala, 'Inventario total', false, 'total')}${barraInv(suma, INV_IDEAL, escala, 'Inventario ideal', false, 'total')}</div>
+`
+          : `<div class="inv-empty" style="margin-top:14px">Captura el inventario de al menos una tienda.</div>`}
+        </div>`;
+      };
+
+      const pintar = () => {
+        // Escala común: la barra más alta de todas las tiendas mide 260 px
+        const maxTotal = Math.max(1, ...tiendas.filter(t => t.inventario).map(t => { const x = invTotales(t.inventario); return Math.max(x.actual, x.ideal); }));
+        const escala = 260 / maxTotal;
+        const leyenda = Object.entries(INV_SEG).map(([k, s]) => `<span><i style="background:var(--inv-${k.replace('_', '-')})"></i>${s.label}</span>`).join('');
+        const zona = $('invLeft');
+        zona.innerHTML = `
+          <div class="inv-head">
+            <div class="panel-title" style="margin:0">INVENTARIO POR TIENDA</div>
+            <div class="inv-legend">${leyenda}</div>
+          </div>
+          <div class="inv-hint">Da clic en cualquier bloque de color para ver la lista de productos a la derecha.</div>
+          <div class="inv-matrix">
+          ${tarjetaTotal()}
+          <div class="inv-tree">
+            ${tiendas.map(t => {
+              const inv = t.inventario;
+              const barras = inv
+                ? `<div class="inv-bars">${barraInv(inv, INV_ACTUAL, escala, 'Inventario total', false, t.id)}${barraInv(inv, INV_IDEAL, escala, 'Inventario ideal', false, t.id)}</div>
+`
+                : `<div class="inv-empty">Sin datos de inventario todavía.<br><button class="link" data-inv="${t.id}" style="margin-top:8px">Cargar en Configuración</button></div>`;
+              return `<div class="inv-row">
+                <div class="inv-txt">
+                  <div class="inv-name">${esc(t.nombre)}</div>
+                  ${t.responsable ? `<div class="inv-meta">Resp.: ${esc(t.responsable)}</div>` : ''}
+                  <div class="inv-meta">${inv ? `Corte: ${esc(fmtFechaLarga(t.inventario_fecha))}` : 'Sin corte de inventario'}</div>
+                  
+                </div>
+                ${barras}
+              </div>`;
+            }).join('')}
+          </div>
+          </div>
+          <div class="muted" style="margin-top:14px;font-size:12px"><b>Inventario total (todas las tiendas)</b> = la suma de las tiendas que ya tienen su inventario capturado. <b>Inventario ideal</b> = Stock normal + En camino + Falta comprar: lo que deberías tener con todo dentro de su máximo. Lo único que se compra es "Falta comprar". Las barras de las tiendas usan la misma escala entre sí para que se puedan comparar.</div>`;
+
+        zona.querySelectorAll('[data-inv]').forEach(b => b.onclick = () => go('config')); // la carga la hace el administrador
+        zona.querySelectorAll('.inv-seg[data-cat]').forEach(sg => {
+          const abrir = () => abrirDetalle(sg.dataset.ref, sg.dataset.cat, tiendas);
+          sg.onclick = abrir;
+          sg.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); abrir(); } };
+        });
+        marcarSeleccion();
+      };
+
+      pintar();
+    },
+
+    // Reportes: elegir una o varias tiendas (2+ = comparativa)
+    async reportes(el){
+      loading(el);
+      try {
+        const tiendas = await getTiendas(true);
+        if (!tiendas.length) {
+          el.innerHTML = `<div class="panel"><div class="panel-title">SELECCIONA LA TIENDA</div>
+            <div class="placeholder">Aún no hay tiendas. Agrégalas en <button class="link" id="goConfig">Configuración</button>.</div></div>`;
+          $('goConfig').onclick = () => go('config');
+          return;
+        }
+        const guardadas = new Set(getSel().filter(id => tiendas.some(t => t.id === id)));
+        el.innerHTML = `<div class="panel">
+          <div class="panel-title">SELECCIONA LA TIENDA</div>
+          <div class="store-grid" role="group" aria-label="Tiendas">
+            ${tiendas.map(t => `<label class="store">
+              <input type="checkbox" name="tienda" value="${t.id}" ${guardadas.has(t.id) ? 'checked' : ''}>
+              <span class="dot"></span>
+              <span class="st-txt"><span class="st-name">${esc(t.nombre)}</span>${t.ubicacion ? `<span class="st-sub">${esc(t.ubicacion)}</span>` : ''}${t.responsable ? `<span class="st-sub">Resp.: ${esc(t.responsable)}</span>` : ''}<span class="st-dist off" data-dist="${t.id}">${PIN}Calculando distancia…</span></span>
+            </label>`).join('')}
+          </div>
+          <div class="panel-foot">
+            <div class="sel-tools"><span id="tiendaSel" class="muted"></span>${tiendas.length > 1 ? '<button type="button" class="link" id="selTodas"></button>' : ''}</div>
+            <button class="btn-dark" id="verReporte" disabled>Continuar</button>
+          </div>
+        </div>
+        <div id="reporteArea"></div>`;
+
+        const elegidas = () => [...el.querySelectorAll('input[name=tienda]:checked')].map(i => tiendas.find(t => t.id === i.value)).filter(Boolean);
+        let mostrado = null; // qué se está mostrando abajo, para refrescar o limpiar al cambiar la selección
+        const pintar = () => {
+          const sel = elegidas();
+          $('tiendaSel').textContent = !sel.length ? 'Ninguna tienda seleccionada'
+            : sel.length === 1 ? `Tienda: ${sel[0].nombre}`
+            : `Comparar ${sel.length} tiendas: ${sel.map(t => t.nombre).join(', ')}`;
+          $('verReporte').disabled = !sel.length;
+          $('verReporte').textContent = sel.length > 1 ? `Comparar (${sel.length})` : 'Continuar';
+          if ($('selTodas')) $('selTodas').textContent = sel.length === tiendas.length ? 'Quitar todas' : 'Seleccionar todas';
+          // Si la selección cambió, lo de abajo ya no corresponde: se limpia
+          if (mostrado && mostrado !== sel.map(t => t.id).join(',')) { $('reporteArea').innerHTML = ''; mostrado = null; $('where').textContent = 'Reportes'; }
+        };
+        const guardar = () => { setSel(elegidas().map(t => t.id)); pintar(); };
+        el.querySelectorAll('input[name=tienda]').forEach(r => r.onchange = guardar);
+        if ($('selTodas')) $('selTodas').onclick = () => {
+          const todas = elegidas().length !== tiendas.length;
+          el.querySelectorAll('input[name=tienda]').forEach(i => i.checked = todas);
+          guardar();
+        };
+        const mostrar = () => {
+          const sel = elegidas(); if (!sel.length) return;
+          mostrado = sel.map(t => t.id).join(',');
+          if (sel.length === 1) {
+            $('reporteArea').innerHTML = `<div class="placeholder" style="margin-top:16px">Reportes de <strong>${esc(sel[0].nombre)}</strong>: listos para construirse.</div>`;
+            $('where').textContent = `Reportes › ${sel[0].nombre}`;
+          } else {
+            $('reporteArea').innerHTML = tablaComparativa(sel);
+            $('where').textContent = `Reportes › Comparativa (${sel.length})`;
+          }
+        };
+        $('verReporte').onclick = mostrar;
+        // Cuando llega una distancia nueva, se actualiza la comparativa abierta
+        pintar();
+        pintarDistancias(el, tiendas, () => { if (mostrado && elegidas().length > 1) mostrar(); });
+      } catch (e) { fail(el, e); }
+    },
+
+    // Configuración: agregar / editar / quitar tiendas
+    async config(el){
+      const mapsUrl = q => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+      const embedUrl = q => 'https://maps.google.com/maps?q=' + encodeURIComponent(q) + '&z=16&output=embed';
+      el.innerHTML = `<div class="panel">
+        <div class="panel-title" id="tTitle">TIENDAS</div>
+        <form class="t-form" id="tiendaForm" autocomplete="off">
+          <input type="hidden" id="tId">
+          <label>Nombre de la tienda *<input id="tNombre" maxlength="100" required></label>
+          <label>Responsable de tienda<input id="tResp" maxlength="120" placeholder="Nombre del responsable"></label>
+          <label class="span2">Ubicación
+            <div class="loc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+              <input id="tUbic" maxlength="200" placeholder="Escribe la dirección, ej. Arteaga 2, Centro, Coatepec, Ver.">
+              <button type="button" class="btn-light" id="tMaps" title="Buscar en Google Maps">Buscar en Google Maps</button>
+            </div>
+          </label>
+          <div class="map-box span2" id="mapBox" hidden><iframe id="mapFrame" title="Vista previa del mapa" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+          <div class="t-actions span2">
+            <button class="btn-dark" id="tAdd" type="submit">Agregar</button>
+            <button class="btn-light" id="tCancel" type="button" hidden>Cancelar</button>
+            <span class="form-msg" id="tMsg"></span>
+          </div>
+        </form>
+        <div id="tLista"></div>
+      </div>
+      <div class="panel" id="invCarga" style="margin-top:16px"></div>`;
+
+      // Vista previa del mapa mientras escribes la dirección
+      let timer;
+      const preview = () => {
+        const q = $('tUbic').value.trim();
+        clearTimeout(timer);
+        if (q.length < 5) { $('mapBox').hidden = true; return; }
+        timer = setTimeout(() => { $('mapFrame').src = embedUrl(q); $('mapBox').hidden = false; }, 700);
+      };
+      $('tUbic').addEventListener('input', preview);
+      $('tMaps').onclick = () => {
+        const q = $('tUbic').value.trim() || $('tNombre').value.trim();
+        window.open(q ? mapsUrl(q) : 'https://www.google.com/maps', '_blank', 'noopener');
+      };
+
+      const limpiar = () => {
+        $('tiendaForm').reset(); $('tId').value = ''; $('mapBox').hidden = true; $('mapFrame').removeAttribute('src');
+        $('tAdd').textContent = 'Agregar'; $('tCancel').hidden = true; $('tTitle').textContent = 'TIENDAS';
+      };
+      $('tCancel').onclick = limpiar;
+
+      const pintar = async (force) => {
+        loading($('tLista'));
+        try {
+          const tiendas = await getTiendas(force);
+          $('tLista').innerHTML = tiendas.length ? `<ul class="t-list">${tiendas.map(t => `
+            <li><div>
+              <div class="st-name">${esc(t.nombre)}</div>
+              ${t.responsable ? `<div class="st-sub">Responsable: ${esc(t.responsable)}</div>` : ''}
+              ${t.ubicacion ? `<div class="st-sub">${esc(t.ubicacion)} · <a class="maplink" href="${mapsUrl(t.ubicacion)}" target="_blank" rel="noopener">Ver en mapa</a></div>` : ''}
+            </div>
+            <div class="row-actions"><button class="link" data-ed="${t.id}">Editar</button><button class="link danger" data-del="${t.id}">Quitar</button></div></li>`).join('')}</ul>`
+            : '<div class="placeholder">Aún no hay tiendas.</div>';
+          $('tLista').querySelectorAll('[data-ed]').forEach(b => b.onclick = () => {
+            const t = tiendas.find(x => x.id === b.dataset.ed);
+            $('tId').value = t.id; $('tNombre').value = t.nombre || ''; $('tResp').value = t.responsable || ''; $('tUbic').value = t.ubicacion || '';
+            $('tAdd').textContent = 'Guardar cambios'; $('tCancel').hidden = false; $('tTitle').textContent = 'EDITAR TIENDA';
+            preview(); $('tNombre').focus(); el.scrollIntoView({ behavior:'smooth' });
+          });
+          $('tLista').querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+            const t = tiendas.find(x => x.id === b.dataset.del);
+            if (!confirm(`¿Quitar la tienda "${t.nombre}"?`)) return;
+            try { await api('tiendas_eliminar', { id: t.id }); setSel(getSel().filter(id => id !== t.id)); limpiar(); pintar(true); }
+            catch (e) { alert(e.message); }
+          });
+        } catch (e) { fail($('tLista'), e); }
+      };
+      panelCargaInventario($('invCarga'));
+      $('tiendaForm').onsubmit = async ev => {
+        ev.preventDefault();
+        $('tAdd').disabled = true; $('tMsg').textContent = '';
+        try {
+          await api('tiendas_guardar', { tienda: { id: $('tId').value || undefined, nombre: $('tNombre').value, responsable: $('tResp').value, ubicacion: $('tUbic').value } });
+          limpiar(); $('tNombre').focus(); pintar(true);
+        } catch (e) { $('tMsg').textContent = e.message; }
+        finally { $('tAdd').disabled = false; }
+      };
+      pintar(true);
+    },
+
+    // Catálogo de empleados: datos de contacto/puesto + vínculo opcional con el checador
+    async 'cat-empleados'(el){
+      el.innerHTML = `<div class="panel">
+        <div class="panel-title" id="eTitle">EMPLEADOS</div>
+        <form class="t-form" id="empForm" autocomplete="off">
+          <input type="hidden" id="eId">
+          <label>Nombre *<input id="eNombre" maxlength="150" required></label>
+          <label>Puesto<input id="ePuesto" maxlength="80" placeholder="Ej. Asesora de ventas"></label>
+          <label>Departamento / Tienda<input id="eDepto" maxlength="80" placeholder="Ej. Mostrador, Mayoreo…"></label>
+          <label>Teléfono<input id="eTel" maxlength="40" placeholder="10 dígitos"></label>
+          <label>Correo<input id="eCorreo" type="email" maxlength="150" placeholder="correo@ejemplo.com"></label>
+          <label>Fecha de ingreso<input id="eIngreso" type="date"></label>
+          <label>Fecha de nacimiento<input id="eNac" type="date"></label>
+          <label class="span2" style="flex-direction:row;align-items:center;gap:8px"><input id="eActivo" type="checkbox" style="width:auto" checked> Activo</label>
+          <label class="span2">Vincular con el checador (opcional, para ver horas y nómina)
+            <select id="eWorker" style="padding:9px 12px;border:1px solid #d9d9dd;border-radius:8px;font:inherit;font-size:14px;width:100%;color:var(--black)">
+              <option value="">— Sin vincular —</option>
+            </select>
+          </label>
+          <div class="t-actions span2">
+            <button class="btn-dark" id="eAdd" type="submit">Agregar</button>
+            <button class="btn-light" id="eCancel" type="button" hidden>Cancelar</button>
+            <span class="form-msg" id="eMsg"></span>
+          </div>
+        </form>
+        <div id="eLista"></div>
+      </div>`;
+
+      const limpiar = () => {
+        $('empForm').reset(); $('eId').value = ''; $('eActivo').checked = true;
+        $('eAdd').textContent = 'Agregar'; $('eCancel').hidden = true; $('eTitle').textContent = 'EMPLEADOS';
+      };
+      $('eCancel').onclick = limpiar;
+
+      const llenarWorkers = (empleados, workers, actualWorkerId) => {
+        const vinculados = new Set(empleados.map(e => e.worker_id).filter(Boolean));
+        const sel = $('eWorker');
+        sel.innerHTML = '<option value="">— Sin vincular —</option>' + workers.map(w => {
+          const ocupado = vinculados.has(w.id) && w.id !== actualWorkerId;
+          return `<option value="${w.id}" ${ocupado ? 'disabled' : ''} ${w.id === actualWorkerId ? 'selected' : ''}>${esc(w.name)}${w.active === false ? ' (inactivo)' : ''}${ocupado ? ' — ya vinculado' : ''}</option>`;
+        }).join('');
+      };
+
+      const pintar = async (force) => {
+        loading($('eLista'));
+        try {
+          const [empleados, workers] = await Promise.all([getEmpleados(force), getChecadorWorkers(force)]);
+          llenarWorkers(empleados, workers, '');
+          $('eLista').innerHTML = empleados.length ? `<ul class="t-list">${empleados.map(e => {
+            const w = workers.find(x => x.id === e.worker_id);
+            return `<li><div>
+              <div class="st-name">${esc(e.nombre)} ${e.activo === false ? '<span class="pill off">Inactivo</span>' : ''}</div>
+              <div class="st-sub">${[e.puesto, e.departamento].filter(Boolean).map(esc).join(' · ') || 'Sin puesto/departamento'}</div>
+              ${(e.telefono || e.correo) ? `<div class="st-sub">${[e.telefono, e.correo].filter(Boolean).map(esc).join(' · ')}</div>` : ''}
+              ${e.fecha_ingreso ? `<div class="st-sub">Ingreso: ${fmtFechaCorta(e.fecha_ingreso)} · Antigüedad: ${fmtAntiguedad(e.fecha_ingreso)}</div>` : ''}
+              <div class="st-sub">${w ? `Vinculado al checador: <strong>${esc(w.name)}</strong>` : 'No vinculado al checador — sin horas ni nómina'}</div>
+            </div>
+            <div class="row-actions"><button class="link" data-ed="${e.id}">Editar</button><button class="link danger" data-del="${e.id}">Quitar</button></div></li>`;
+          }).join('')}</ul>`
+            : '<div class="placeholder">Aún no hay empleados. Al agregar uno nuevo puedes vincularlo con un trabajador del checador para ver sus horas y nómina en Personal › Lista de personal.</div>';
+
+          $('eLista').querySelectorAll('[data-ed]').forEach(b => b.onclick = () => {
+            const e = empleados.find(x => x.id === b.dataset.ed);
+            $('eId').value = e.id; $('eNombre').value = e.nombre || ''; $('ePuesto').value = e.puesto || '';
+            $('eDepto').value = e.departamento || ''; $('eTel').value = e.telefono || ''; $('eCorreo').value = e.correo || '';
+            $('eIngreso').value = e.fecha_ingreso || ''; $('eNac').value = e.fecha_nacimiento || '';
+            $('eActivo').checked = e.activo !== false;
+            llenarWorkers(empleados, workers, e.worker_id || '');
+            $('eAdd').textContent = 'Guardar cambios'; $('eCancel').hidden = false; $('eTitle').textContent = 'EDITAR EMPLEADO';
+            $('eNombre').focus(); el.scrollIntoView({ behavior: 'smooth' });
+          });
+          $('eLista').querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+            const e = empleados.find(x => x.id === b.dataset.del);
+            if (!confirm(`¿Quitar a "${e.nombre}" del catálogo? (esto no borra su historial del checador)`)) return;
+            try { await api('empleados_eliminar', { id: e.id }); limpiar(); pintar(true); }
+            catch (err) { alert(err.message); }
+          });
+        } catch (e) { fail($('eLista'), e); }
+      };
+
+      $('empForm').onsubmit = async ev => {
+        ev.preventDefault();
+        $('eAdd').disabled = true; $('eMsg').textContent = '';
+        try {
+          await api('empleados_guardar', { empleado: {
+            id: $('eId').value || undefined, nombre: $('eNombre').value, puesto: $('ePuesto').value,
+            departamento: $('eDepto').value, telefono: $('eTel').value, correo: $('eCorreo').value,
+            fecha_ingreso: $('eIngreso').value || null, fecha_nacimiento: $('eNac').value || null,
+            activo: $('eActivo').checked, worker_id: $('eWorker').value || null,
+          } });
+          limpiar(); $('eNombre').focus(); pintar(true);
+        } catch (e) { $('eMsg').textContent = e.message; }
+        finally { $('eAdd').disabled = false; }
+      };
+      pintar(true);
+    },
+
+    // Personal: ficha operativa de cada colaborador (catálogo + horas/nómina de la semana actual, vía el checador)
+    async 'per-lista'(el){
+      loading(el);
+      try {
+        const { semana, personal } = await api('personal_resumen');
+        if (!personal.length) {
+          el.innerHTML = `<div class="panel"><div class="panel-title">LISTA DE PERSONAL</div>
+            <div class="placeholder">Aún no hay personal registrado. Agrégalo en <button class="link" id="goCat">Catálogos › Empleados</button>.</div></div>`;
+          $('goCat').onclick = () => go('cat-empleados');
+          return;
+        }
+        const parseWeekKey = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+        const weekLabel = semana ? `${parseWeekKey(semana.inicio).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })} – ${parseWeekKey(semana.fin).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}` : '';
+        el.innerHTML = `<div class="panel">
+          <div class="panel-title">LISTA DE PERSONAL</div>
+          <div class="muted" style="margin-bottom:14px">Horas y nómina de la semana actual${weekLabel ? ` (${weekLabel}, viernes a jueves)` : ''}, según el checador.</div>
+          <div class="per-grid">
+            ${personal.map(p => `<div class="per-card">
+              <div class="pc-head">
+                <div><div class="pc-name">${esc(p.nombre)}</div>
+                <div class="pc-sub">${[p.puesto, p.departamento].filter(Boolean).map(esc).join(' · ') || 'Sin puesto/departamento'}</div></div>
+                <span class="pill ${p.activo === false ? 'off' : 'ok'}">${p.activo === false ? 'Inactivo' : 'Activo'}</span>
+              </div>
+              ${(p.telefono || p.correo) ? `<div class="pc-sub">${[p.telefono, p.correo].filter(Boolean).map(esc).join(' · ')}</div>` : ''}
+              <div class="pc-sub">Ingreso: ${fmtFechaCorta(p.fecha_ingreso)} · Antigüedad: ${fmtAntiguedad(p.fecha_ingreso)}</div>
+              ${p.vinculado ? `<div class="pc-nums">
+                <div class="pc-num"><span>Horas semana</span><b>${fmtHoras(p.horas)}</b>${p.en_curso ? '<span class="pill open" style="margin-top:4px">en curso</span>' : ''}</div>
+                <div class="pc-num"><span>Nómina semana</span><b>${fmtDinero(p.nomina)}</b></div>
+              </div>` : `<div class="muted" style="margin-top:12px">Sin vincular al checador — sin horas ni nómina. <button class="link" data-link="${p.id}">Vincular</button></div>`}
+            </div>`).join('')}
+          </div>
+        </div>`;
+        el.querySelectorAll('[data-link]').forEach(b => b.onclick = () => go('cat-empleados'));
+      } catch (e) { fail(el, e); }
+    },
+
+    // Personal: historial de entradas/salidas y nómina acumulada (mismos datos que el checador)
+    async 'per-historial'(el){
+      let worker = 'all', rango = 'today', desde = '', hasta = '';
+      let sesiones = [];
+      const workers = await getChecadorWorkers(true).catch(() => []);
+
+      el.innerHTML = `<div class="panel">
+        <div class="panel-title">HISTORIAL Y NÓMINA</div>
+        <div id="filtrosWrap"></div>
+        <div id="histArea"></div>
+      </div>`;
+
+      function renderFiltros(){
+        $('filtrosWrap').innerHTML = `<div class="filter-row">
+          <select id="histWorker">
+            <option value="all">Todos</option>
+            ${workers.map(w => `<option value="${w.id}" ${worker === w.id ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}
+          </select>
+          <select id="histRango">
+            <option value="today" ${rango === 'today' ? 'selected' : ''}>Hoy</option>
+            <option value="week" ${rango === 'week' ? 'selected' : ''}>Últimos 7 días</option>
+            <option value="month" ${rango === 'month' ? 'selected' : ''}>Último mes</option>
+            <option value="all" ${rango === 'all' ? 'selected' : ''}>Todo</option>
+            <option value="custom" ${rango === 'custom' ? 'selected' : ''}>Rango personalizado…</option>
+          </select>
+          ${rango === 'custom' ? `<input type="date" id="histDesde" value="${esc(desde)}"><span class="muted">a</span><input type="date" id="histHasta" value="${esc(hasta)}">` : ''}
+        </div>`;
+        $('histWorker').onchange = e => { worker = e.target.value; cargar(); };
+        $('histRango').onchange = e => { rango = e.target.value; renderFiltros(); pintarTabla(); };
+        if (rango === 'custom') {
+          $('histDesde').onchange = e => { desde = e.target.value; pintarTabla(); };
+          $('histHasta').onchange = e => { hasta = e.target.value; pintarTabla(); };
+        }
+      }
+
+      function pintarTabla(){
+        const now = new Date();
+        const filtradas = sesiones.filter(s => {
+          const d = new Date(s.fecha);
+          if (rango === 'today') return d.toDateString() === now.toDateString();
+          if (rango === 'week') return (now - d) / 86400000 <= 7;
+          if (rango === 'month') return (now - d) / 86400000 <= 30;
+          if (rango === 'custom') {
+            if (desde && d < new Date(desde + 'T00:00:00')) return false;
+            if (hasta && d > new Date(hasta + 'T23:59:59')) return false;
+            return true;
+          }
+          return true;
+        });
+        const totalHoras = filtradas.reduce((s, x) => s + (x.horas || 0), 0);
+        $('histArea').innerHTML = `
+          <div style="background:var(--off);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
+            <div><div class="muted" style="font-size:11px;font-weight:800;text-transform:uppercase">Horas totales</div><div style="font-size:18px;font-weight:800">${fmtHoras(totalHoras)}</div></div>
+            <div class="muted">${filtradas.length} turno(s)</div>
+          </div>
+          ${filtradas.length ? `<div class="hist-table-wrap"><table class="hist-table"><thead><tr><th>Fecha</th><th>Colaborador</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Nómina</th></tr></thead><tbody>
+            ${filtradas.map(s => `<tr>
+              <td>${fmtFechaCorta(s.fecha)}</td><td>${esc(s.worker_name)}</td>
+              <td>${s.entrada ? fmtHoraCorta(s.entrada) : '—'}</td>
+              <td>${s.salida ? fmtHoraCorta(s.salida) : (s.estado === 'abierta' ? '<span class="pill open">en curso</span>' : '—')}</td>
+              <td class="num">${s.estado === 'incompleta' ? '<span class="pill off">incompleto</span>' : fmtHoras(s.horas)}</td>
+              <td class="num">${fmtDinero(s.nomina)}</td>
+            </tr>`).join('')}
+          </tbody></table></div>` : '<div class="placeholder">No hay registros en este periodo.</div>'}
+          <div class="muted" style="margin-top:12px;font-size:12px">La columna Nómina es acumulada: en cada turno muestra el pago correspondiente a las horas trabajadas hasta ese punto de la semana (regla de 3 contra las horas programadas).</div>
+        `;
+      }
+
+      async function cargar(){
+        loading($('histArea'));
+        try {
+          const body = worker !== 'all' ? { worker_id: worker } : {};
+          const { sesiones: s } = await api('historial_listar', body);
+          sesiones = s;
+          pintarTabla();
+        } catch (e) { fail($('histArea'), e); }
+      }
+
+      renderFiltros();
+      cargar();
+    },
+  };
+
+  $('nav').addEventListener('click', e => {
+    const t = e.target.closest('[data-toggle]');
+    if (t) {
+      const side = $('side');
+      if (side.classList.contains('mini') && !isMobile()) { setMini(false); openGroups.add(t.dataset.toggle); renderMenu($('navSearch').value); return; }
+      const id = t.dataset.toggle;
+      openGroups.has(id) ? openGroups.delete(id) : openGroups.add(id);
+      renderMenu($('navSearch').value);
+      return;
+    }
+    const g = e.target.closest('[data-go]');
+    if (g) go(g.dataset.go);
+  });
+
+  $('navSearch').addEventListener('input', e => renderMenu(e.target.value));
+  $('navSearch').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { const first = $('nav').querySelector('[data-go]'); if (first) { go(first.dataset.go); e.target.value=''; renderMenu(); } }
+    if (e.key === 'Escape') { e.target.value=''; renderMenu(); }
+  });
+
+  // Contraer / expandir (escritorio) y cajón (celular)
+  const isMobile = () => matchMedia('(max-width:760px)').matches;
+  function setMini(v){ $('side').classList.toggle('mini', v); ls.set('genesis_menu_mini', v ? '1' : '0'); renderMenu($('navSearch').value); }
+  $('collapseBtn').onclick = () => setMini(!$('side').classList.contains('mini'));
+  function openDrawer(){ $('side').classList.add('open'); $('scrim').classList.add('show'); }
+  function closeDrawer(){ $('side').classList.remove('open'); $('scrim').classList.remove('show'); }
+  $('menuToggle').onclick = () => $('side').classList.contains('open') ? closeDrawer() : openDrawer();
+  $('scrim').onclick = closeDrawer;
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeDrawer();
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && !$('app').hidden) { e.preventDefault(); if (isMobile()) openDrawer(); else setMini(false); $('navSearch').focus(); }
+  });
+
+  $('sideFoot').innerHTML = `<button class="nav-item" id="logoutBtn"><span class="ico">${svg(FOOT.icon)}</span><span class="lbl">${FOOT.label}</span></button>`;
+
+  // ===== Sesión =====
+  function showApp(){
+    $('login').hidden = true; $('app').hidden = false;
+    setMini(ls.get('genesis_menu_mini') === '1');
+    go('inicio');
+  }
+  function showLogin(msg = ''){ $('app').hidden = true; $('login').hidden = false; $('loginMsg').textContent = msg; $('password').value = ''; $('password').focus(); }
+
+  function startLoader(){
+    const l = $('loader'), bar = $('barFill');
+    bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = '';
+    l.hidden = false; requestAnimationFrame(() => l.classList.add('show'));
+  }
+  function stopLoader(){ const l = $('loader'); l.classList.remove('show'); setTimeout(() => l.hidden = true, 250); }
+
+  $('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const pwd = $('password').value.trim();
+    if (!pwd) return;
+    CODE = pwd;
+    $('loginBtn').disabled = true; $('loginMsg').textContent = '';
+    startLoader();
+    const espera = new Promise(r => setTimeout(r, 2000)); // carga de ~2 s
+    try {
+      await Promise.all([api('verificar'), espera]);
+      ss.set('genesis_code', pwd); showApp();
+    } catch (err) {
+      await espera;
+      CODE = null;
+      $('loginMsg').textContent = err.status === 401 ? 'Contraseña incorrecta' : 'No se pudo conectar';
+    } finally {
+      stopLoader(); $('loginBtn').disabled = false;
+    }
+  });
+
+  $('logoutBtn').onclick = () => { CODE = null; ss.del('genesis_code'); closeDrawer(); showLogin(); };
+
+  (async () => {
+    const saved = ss.get('genesis_code');
+    if (saved) { CODE = saved; try { await api('verificar'); showApp(); return; } catch { ss.del('genesis_code'); CODE = null; } }
+    showLogin();
+  })();
+</script>
+</body>
+</html>
